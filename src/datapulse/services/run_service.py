@@ -227,7 +227,7 @@ class RunService:
         elif check_type == CheckType.TARGET_SCHEMA_COMPATIBILITY:
             if target_path and target_contract:
                 return check_schema_compatibility(target_path, target_contract.schema_definition)
-            return {"status": CheckStatus.PASSED, "message": "No target to validate"}
+            return {"status": CheckStatus.SKIPPED, "message": "No target to validate"}
         elif check_type == CheckType.ROW_COUNT:
             return check_row_count(source_path, contract.quality_rules, target_path)
         elif check_type == CheckType.FRESHNESS:
