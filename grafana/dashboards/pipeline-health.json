@@ -137,7 +137,7 @@
       },
       "targets": [
         {
-          "rawSql": "SELECT pr.started_at AS time, p.name AS pipeline, CASE WHEN pr.status = 'passed' THEN 0 WHEN pr.status = 'late' THEN 1 ELSE 2 END AS status_code, pr.status FROM pipeline_runs pr JOIN pipelines p ON p.id = pr.pipeline_id ORDER BY pr.started_at;",
+          "rawSql": "SELECT pr.started_at AS \"time\", p.name AS pipeline, CASE WHEN pr.status = 'passed' THEN 0 WHEN pr.status = 'late' THEN 1 ELSE 2 END AS status_code, pr.status FROM pipeline_runs pr JOIN pipelines p ON p.id = pr.pipeline_id WHERE pr.ended_at IS NOT NULL ORDER BY pr.started_at;",
           "format": "table",
           "refId": "A"
         }
