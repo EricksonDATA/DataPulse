@@ -83,6 +83,10 @@ class RunRepository:
             q = q.filter_by(status=RunStatus(status))
         return q.order_by(PipelineRun.started_at.desc()).offset(offset).limit(limit).all()
 
+    def find_by_run_id(self, run_id: str) -> PipelineRun | None:
+        """Find a run by its run_id across all pipelines."""
+        return self.session.query(PipelineRun).filter_by(run_id=run_id).first()
+
 
 class CheckResultRepository:
     """CRUD operations for check results."""

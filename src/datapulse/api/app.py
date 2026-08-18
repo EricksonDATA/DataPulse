@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from datapulse.api.deps import get_db
@@ -289,3 +290,44 @@ def readiness(db: Session = Depends(get_db)):
         database=db_status,
         version="0.2.0",
     )
+
+
+# ── POST /runs/{run_id}/acknowledge ────────────────────────────
+
+@app.post("/runs/{run_id}/acknowledge")
+def acknowledge_run(run_id: str, db: Session = Depends(get_db)):
+    """Acknowledge a run's incidents — marks them as acknowledged."""
+    run_repo = RunRepository(db)
+    run = run_repo.find_by_run_id(run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+
+    incident_repo = IncidentRepository(db)
+    incidents = incident_repo.get_for_run(run.id)
+    acknowledged = 0
+    for inc in incidents:
+        from datapulse.models.incident import IncidentStatus
+        if inc.status == IncidentStatus.OPEN:
+            inc.status = IncidentStatus.ACKNOWLEDGED
+            acknowledged += 1
+    db.commit()
+
+    return {"run_id": run_id, "acknowledged": acknowledged}
+
+
+# ── POST /webhook/receiver ─────────────────────────────────────
+
+_webhook_log: list[dict] = []
+
+@app.post("/webhook/receiver")
+def webhook_receiver(payload: dict):
+    """Receive and log webhook notifications from Grafana alerts."""
+    _webhook_log.append(payload)
+    logger.info("webhook_received", extra={"payload_keys": list(payload.keys())})
+    return {"status": "received"}
+
+
+@app.get("/webhook/log")
+def get_webhook_log(limit: int = 20):
+    """View recent webhook notifications."""
+    return _webhook_log[-limit:]
