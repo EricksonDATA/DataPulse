@@ -1,0 +1,341 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "DataPulse pipeline observability dashboard",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Pipeline Status",
+      "description": "Current status of each pipeline's latest run",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "datapulse-pg"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "passed": {
+                  "text": "\u2705 Passed",
+                  "color": "green"
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "failed": {
+                  "text": "\u274c Failed",
+                  "color": "red"
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "late": {
+                  "text": "\u23f0 Late",
+                  "color": "yellow"
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "running": {
+                  "text": "\ud83d\udd04 Running",
+                  "color": "blue"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT p.name AS pipeline, pr.run_id, pr.status, pr.started_at, pr.ended_at, EXTRACT(EPOCH FROM (pr.ended_at - pr.started_at))::int AS duration_seconds, pr.source_row_count, pr.target_row_count, pr.failure_reason FROM pipeline_runs pr JOIN pipelines p ON p.id = pr.pipeline_id WHERE pr.id IN (SELECT MAX(id) FROM pipeline_runs GROUP BY pipeline_id) ORDER BY p.name;",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Run History",
+      "description": "Recent pipeline runs over time",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "datapulse-pg"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "passed": {
+                  "index": 0,
+                  "color": "green"
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "failed": {
+                  "index": 1,
+                  "color": "red"
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "late": {
+                  "index": 2,
+                  "color": "yellow"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT pr.started_at AS time, p.name AS pipeline, CASE WHEN pr.status = 'passed' THEN 0 WHEN pr.status = 'late' THEN 1 ELSE 2 END AS status_code, pr.status FROM pipeline_runs pr JOIN pipelines p ON p.id = pr.pipeline_id ORDER BY pr.started_at;",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Freshness: Age vs Threshold",
+      "description": "Shows how old the latest data is compared to the freshness threshold",
+      "type": "bargauge",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "datapulse-pg"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 12
+              },
+              {
+                "color": "red",
+                "value": 24
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "WITH latest AS (SELECT pipeline_id, MAX(id) AS max_id FROM pipeline_runs GROUP BY pipeline_id) SELECT p.name AS pipeline, EXTRACT(EPOCH FROM (NOW() - pr.ended_at)) / 3600.0 AS age_hours FROM pipeline_runs pr JOIN pipelines p ON p.id = pr.pipeline_id JOIN latest l ON l.max_id = pr.id ORDER BY age_hours DESC;",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Row Counts: Source vs Target",
+      "description": "Source and target row counts from the latest run of each pipeline",
+      "type": "barchart",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "datapulse-pg"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "WITH latest AS (SELECT pipeline_id, MAX(id) AS max_id FROM pipeline_runs GROUP BY pipeline_id) SELECT p.name AS pipeline, pr.source_row_count AS source, pr.target_row_count AS target FROM pipeline_runs pr JOIN pipelines p ON p.id = pr.pipeline_id JOIN latest l ON l.max_id = pr.id ORDER BY p.name;",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Failed Checks by Type",
+      "description": "Count of failed checks grouped by check type",
+      "type": "piechart",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "datapulse-pg"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT cr.check_type AS metric, COUNT(*) AS value FROM check_results cr WHERE cr.status = 'failed' GROUP BY cr.check_type ORDER BY value DESC;",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Open Incidents",
+      "description": "Currently open incidents by owner and severity",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "datapulse-pg"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "high": {
+                  "color": "red"
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "medium": {
+                  "color": "yellow"
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "low": {
+                  "color": "blue"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT i.id, p.name AS pipeline, pr.run_id, i.incident_type, i.severity, i.owner, i.retryable, i.failure_summary, i.first_observed_at FROM incidents i JOIN pipeline_runs pr ON pr.id = i.pipeline_run_id JOIN pipelines p ON p.id = pr.pipeline_id WHERE i.status = 'open' ORDER BY i.first_observed_at DESC;",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Recent Schema Drift Events",
+      "description": "Schema compatibility failures in the last 30 days",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "datapulse-pg"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT p.name AS pipeline, pr.run_id, cr.check_type, cr.message, cr.expected, cr.observed, pr.started_at FROM check_results cr JOIN pipeline_runs pr ON pr.id = cr.pipeline_run_id JOIN pipelines p ON p.id = pr.pipeline_id WHERE cr.check_type IN ('schema_compatibility', 'target_schema_compatibility') AND cr.status = 'failed' ORDER BY pr.started_at DESC LIMIT 50;",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "datapulse",
+    "observability"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "DataPulse \u2014 Pipeline Health",
+  "uid": "datapulse-health",
+  "version": 1
+}

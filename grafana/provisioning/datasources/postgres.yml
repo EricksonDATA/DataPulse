@@ -1,0 +1,19 @@
+apiVersion: 1
+
+datasources:
+  - name: DataPulse-PostgreSQL
+    type: postgres
+    uid: datapulse-pg
+    access: proxy
+    url: postgres:5432
+    database: datapulse
+    user: datapulse
+    secureJsonData:
+      password: change-me
+    jsonData:
+      sslmode: disable
+      maxOpenConns: 10
+      maxIdleConns: 5
+      connMaxLifetime: 14400
+    isDefault: true
+    editable: true
