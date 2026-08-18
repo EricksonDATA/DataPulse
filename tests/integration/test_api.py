@@ -327,6 +327,43 @@ class TestDuplicateKeyValidation:
         assert "duplicate" in row_check["message"].lower()
 
 
+class TestTargetSchemaSkipped:
+    """Regression: target_schema_compat must be SKIPPED when no target supplied."""
+
+    def test_no_target_returns_skipped(self, client, registered_dataset):
+        """When no target_path is given, target_schema_compatibility should be skipped."""
+        # Register a target dataset so the check type is active
+        r = client.post("/datasets", json={
+            "pipeline_name": "ecommerce_inventory",
+            "dataset_name": "inventory_target",
+            "role": "target",
+            "contract_version": 1,
+            "schema_definition": {
+                "snapshot_date": {"type": "date", "nullable": False},
+                "product_id": {"type": "integer", "nullable": False},
+                "sku": {"type": "string", "nullable": False},
+                "warehouse_id": {"type": "string", "nullable": False},
+                "stock_on_hand": {"type": "integer", "nullable": False},
+            },
+            "freshness": {"max_age_hours": 24, "timestamp_column": "snapshot_date"},
+            "quality_rules": {"unique_keys": ["product_id"], "min_row_count": 1, "max_row_count": 100},
+        })
+        assert r.status_code == 201
+
+        # Run with source only — no target_path
+        r = client.post("/runs", json={
+            "pipeline_name": "ecommerce_inventory",
+            "run_id": "run-tgt-skip",
+            "source_path": f"{FIXTURES}/inventory_valid.csv",
+        })
+        d = r.json()
+        assert r.status_code == 201
+
+        target_check = next(c for c in d["checks"] if c["type"] == "target_schema_compatibility")
+        assert target_check["status"] == "skipped"
+        assert "no target" in target_check["message"].lower()
+
+
 class TestSourceToTargetReconciliation:
     def test_matching_counts_pass(self, client, registered_dataset, tmp_path):
         """Source and target with same row count should pass."""
