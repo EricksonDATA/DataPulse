@@ -1,0 +1,27 @@
+[project]
+name = "datapulse"
+version = "0.2.0"
+description = "Data contract and pipeline observability platform"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.34,<1",
+    "pydantic>=2.0,<3",
+    "sqlalchemy>=2.0,<3",
+    "psycopg[binary]>=3.1,<4",
+    "alembic>=1.13,<2",
+    "python-dotenv>=1.0,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0,<9",
+    "httpx>=0.27,<1",
+]
+
+[project.scripts]
+datapulse = "datapulse.cli:main"
+
+[tool.alembic]
+script_location = "migrations"
+sqlalchemy.url = "sqlite:///datapulse.db"

@@ -1,0 +1,6 @@
+admission_id,patient_sk,hospital_sk,department_sk,doctor_sk,admission_date,discharge_date,admission_type,discharge_status,diagnosis_code,severity,total_cost,insurance_sk,length_of_stay_days
+1,101,1,1,201,2026-07-15,2026-07-20,Elective,Discharged,I10,Mild,4500.00,1,5
+2,102,1,2,202,2026-07-16,2026-07-22,Emergency,Discharged,G40,Moderate,12000.00,2,6
+3,103,2,3,203,2026-07-17,,Inpatient,Transferred,M17,Severe,8500.00,1,0
+4,104,2,1,204,2026-07-18,2026-07-25,Emergency,Discharged,I21,Critical,35000.00,3,7
+5,105,3,4,205,2026-07-19,2026-07-21,Outpatient,Discharged,J06,Mild,1200.00,2,2

@@ -1,0 +1,29 @@
+pipeline_name: ecommerce_inventory
+dataset_name: inventory_snapshot
+contract_version: 1
+owner: data-platform
+grain: one row per product per snapshot
+
+freshness:
+  max_age_hours: 24
+  timestamp_column: snapshot_date
+
+schema:
+  snapshot_date:          {type: date,    nullable: false}
+  product_id:             {type: integer, nullable: false}
+  sku:                    {type: string,  nullable: false}
+  warehouse_id:           {type: string,  nullable: false}
+  stock_on_hand:          {type: integer, nullable: false}
+  reserved_quantity:      {type: integer, nullable: false}
+  reorder_point:          {type: integer, nullable: false}
+  reorder_quantity:       {type: integer, nullable: false}
+  restock_lead_time_days: {type: integer, nullable: false}
+  unit_cost:              {type: decimal, nullable: false}
+  supplier_id:            {type: string,  nullable: false}
+  supplier_name:          {type: string,  nullable: false}
+  last_restock_date:      {type: date,    nullable: false}
+
+quality:
+  unique_keys: [product_id]
+  min_row_count: 1
+  max_row_count: 50

@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: datapulse
+      POSTGRES_PASSWORD: change-me
+      POSTGRES_DB: datapulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U datapulse"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATAPULSE_DATABASE_URL: postgresql+psycopg://datapulse:change-me@postgres:5432/datapulse
+      DATAPULSE_LOG_LEVEL: INFO
+      DATAPULSE_ENVIRONMENT: development
+    volumes:
+      - ./examples/fixtures:/app/examples/fixtures:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

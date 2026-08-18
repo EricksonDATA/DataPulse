@@ -1,0 +1,6 @@
+snapshot_date,product_id,sku,warehouse_id,stock_on_hand,reserved_quantity,reorder_point,reorder_quantity,restock_lead_time_days,unit_cost,supplier_id,supplier_name,last_restock_date
+TODAY,1,FS-0001,WH-NYC,33,6,20,60,7,72.50,SUP-001,Northline Supply,TODAY
+TODAY,2,FS-0002,WH-NYC,5,3,15,50,10,14.25,SUP-002,Urban Goods Co,TODAY
+TODAY,3,FS-0003,WH-DAL,106,19,40,100,5,28.90,SUP-002,Urban Goods Co,TODAY
+TODAY,4,FS-0004,WH-LAX,1,1,12,45,14,9.50,SUP-003,Pacific Imports,TODAY
+TODAY,5,FS-0005,WH-NYC,17,5,10,30,12,410.00,SUP-004,Heritage Jewelers,TODAY

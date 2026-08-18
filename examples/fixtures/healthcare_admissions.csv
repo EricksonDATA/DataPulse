@@ -1,0 +1,6 @@
+admission_id,patient_id,hospital_id,department_name,doctor_id,admission_date,discharge_date,admission_type,discharge_status,diagnosis_code,severity,total_cost,insurance_id,room_number,bed_number
+ADM-001,PAT-1001,HOS-01,CARDIOLOGY,DOC-201,2026-07-15,2026-07-20,Elective,Discharged,I10,Mild,4500.00,INS-01,101,1
+ADM-002,PAT-1002,HOS-01,NEUROLOGY,DOC-202,2026-07-16,2026-07-22,Emergency,Discharged,G40,Moderate,12000.00,INS-02,201,3
+ADM-003,PAT-1003,HOS-02,ORTHOPEDICS,DOC-203,2026-07-17,,Inpatient,Transferred,M17,Severe,8500.00,INS-01,305,2
+ADM-004,PAT-1004,HOS-02,CARDIOLOGY,DOC-204,2026-07-18,2026-07-25,Emergency,Discharged,I21,Critical,35000.00,INS-03,102,1
+ADM-005,PAT-1005,HOS-03,PEDIATRICS,DOC-205,2026-07-19,2026-07-21,Outpatient,Discharged,J06,Mild,1200.00,INS-02,410,4
