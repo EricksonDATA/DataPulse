@@ -1,5 +1,6 @@
-"""API routes — the 6 DataPulse endpoints."""
+"""API routes — DataPulse endpoints."""
 
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, Depends, HTTPException
@@ -33,6 +34,7 @@ app = FastAPI(
 
 # Initialize structured logging
 setup_logging()
+logger = logging.getLogger("datapulse.api")
 
 
 # ── GET /health ─────────────────────────────────────────────────
