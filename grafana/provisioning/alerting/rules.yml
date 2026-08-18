@@ -1,0 +1,202 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    folder: DataPulse
+    name: DataPulse Alerts
+    interval: 30s
+    rules:
+      # ── Rule 1: Pipeline run failed ──
+      - uid: alert-pipeline-failed
+        title: Pipeline run failed
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: datapulse-pg
+            model:
+              rawSql: >
+                SELECT p.name AS pipeline, pr.run_id, pr.status,
+                       pr.failure_reason, pr.ended_at AS "time"
+                FROM pipeline_runs pr
+                JOIN pipelines p ON p.id = pr.pipeline_id
+                WHERE pr.id IN (SELECT MAX(id) FROM pipeline_runs GROUP BY pipeline_id)
+                  AND pr.status = 'failed'
+                ORDER BY pr.ended_at DESC;
+              format: table
+              datasource:
+                type: grafana-postgresql-datasource
+                uid: datapulse-pg
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: count
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+        for: 0s
+        labels:
+          severity: high
+          owner: data-platform
+          category: pipeline-health
+        annotations:
+          summary: "Pipeline {{ $labels.pipeline }} latest run is FAILED"
+          runbook: "Check /pipelines/{{ $labels.pipeline }}/runs for details"
+
+      # ── Rule 2: Freshness exceeded ──
+      - uid: alert-freshness-exceeded
+        title: Freshness age exceeds threshold
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: datapulse-pg
+            model:
+              rawSql: >
+                WITH latest AS (
+                  SELECT pipeline_id, MAX(id) AS max_id
+                  FROM pipeline_runs
+                  WHERE ended_at IS NOT NULL
+                  GROUP BY pipeline_id
+                )
+                SELECT p.name AS pipeline,
+                       EXTRACT(EPOCH FROM (NOW() - pr.ended_at)) / 3600.0 AS age_hours,
+                       pr.ended_at AS "time"
+                FROM pipeline_runs pr
+                JOIN pipelines p ON p.id = pr.pipeline_id
+                JOIN latest l ON l.max_id = pr.id
+                WHERE EXTRACT(EPOCH FROM (NOW() - pr.ended_at)) / 3600.0 > 24;
+              format: table
+              datasource:
+                type: grafana-postgresql-datasource
+                uid: datapulse-pg
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: count
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+        for: 0s
+        labels:
+          severity: high
+          owner: data-platform
+          category: freshness
+        annotations:
+          summary: "Pipeline {{ $labels.pipeline }} data is {{ $values.A }} hours old (threshold: 24h)"
+          runbook: "Check data source freshness and pipeline schedule"
+
+      # ── Rule 3: Open incidents > 0 ──
+      - uid: alert-open-incidents
+        title: Open incidents detected
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: datapulse-pg
+            model:
+              rawSql: >
+                SELECT p.name AS pipeline, i.severity, i.owner,
+                       i.failure_summary, i.first_observed_at AS "time"
+                FROM incidents i
+                JOIN pipeline_runs pr ON pr.id = i.pipeline_run_id
+                JOIN pipelines p ON p.id = pr.pipeline_id
+                WHERE i.status = 'open'
+                ORDER BY i.first_observed_at DESC;
+              format: table
+              datasource:
+                type: grafana-postgresql-datasource
+                uid: datapulse-pg
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: count
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+        for: 0s
+        labels:
+          severity: medium
+          owner: data-platform
+          category: incidents
+        annotations:
+          summary: "{{ $values.A }} open incident(s) detected"
+          runbook: "Check /pipelines/{name}/incidents and acknowledge or resolve"
+
+      # ── Rule 4: Schema drift detected ──
+      - uid: alert-schema-drift
+        title: Schema drift detected
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: datapulse-pg
+            model:
+              rawSql: >
+                SELECT p.name AS pipeline, cr.check_type, cr.message,
+                       cr.expected, cr.observed, pr.started_at AS "time"
+                FROM check_results cr
+                JOIN pipeline_runs pr ON pr.id = cr.pipeline_run_id
+                JOIN pipelines p ON p.id = pr.pipeline_id
+                WHERE cr.check_type IN ('schema_compatibility', 'target_schema_compatibility')
+                  AND cr.status = 'failed'
+                ORDER BY pr.started_at DESC;
+              format: table
+              datasource:
+                type: grafana-postgresql-datasource
+                uid: datapulse-pg
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: count
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+        for: 0s
+        labels:
+          severity: high
+          owner: data-platform
+          category: schema-drift
+        annotations:
+          summary: "Schema drift detected for pipeline {{ $labels.pipeline }}"
+          runbook: "Review expected vs observed schema in check_results"
