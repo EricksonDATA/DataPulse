@@ -29,7 +29,7 @@
             {
               "type": "value",
               "options": {
-                "passed": {
+                "PASSED": {
                   "text": "\u2705 Passed",
                   "color": "green"
                 }
@@ -38,7 +38,7 @@
             {
               "type": "value",
               "options": {
-                "failed": {
+                "FAILED": {
                   "text": "\u274c Failed",
                   "color": "red"
                 }
@@ -47,7 +47,7 @@
             {
               "type": "value",
               "options": {
-                "late": {
+                "LATE": {
                   "text": "\u23f0 Late",
                   "color": "yellow"
                 }
@@ -56,7 +56,7 @@
             {
               "type": "value",
               "options": {
-                "running": {
+                "RUNNING": {
                   "text": "\ud83d\udd04 Running",
                   "color": "blue"
                 }
@@ -94,7 +94,7 @@
             {
               "type": "value",
               "options": {
-                "passed": {
+                "PASSED": {
                   "index": 0,
                   "color": "green"
                 }
@@ -103,7 +103,7 @@
             {
               "type": "value",
               "options": {
-                "failed": {
+                "FAILED": {
                   "index": 1,
                   "color": "red"
                 }
@@ -112,7 +112,7 @@
             {
               "type": "value",
               "options": {
-                "late": {
+                "LATE": {
                   "index": 2,
                   "color": "yellow"
                 }
@@ -137,7 +137,7 @@
       },
       "targets": [
         {
-          "rawSql": "SELECT pr.started_at AS \"time\", p.name AS pipeline, CASE WHEN pr.status = 'passed' THEN 0 WHEN pr.status = 'late' THEN 1 ELSE 2 END AS status_code, pr.status FROM pipeline_runs pr JOIN pipelines p ON p.id = pr.pipeline_id WHERE pr.ended_at IS NOT NULL ORDER BY pr.started_at;",
+          "rawSql": "SELECT pr.started_at AS \"time\", p.name AS pipeline, CASE WHEN pr.status = 'PASSED' THEN 0 WHEN pr.status = 'LATE' THEN 1 ELSE 2 END AS status_code, pr.status FROM pipeline_runs pr JOIN pipelines p ON p.id = pr.pipeline_id WHERE pr.ended_at IS NOT NULL ORDER BY pr.started_at;",
           "format": "table",
           "refId": "A"
         }
@@ -234,7 +234,7 @@
       },
       "targets": [
         {
-          "rawSql": "SELECT cr.check_type AS metric, COUNT(*) AS value FROM check_results cr WHERE cr.status = 'failed' GROUP BY cr.check_type ORDER BY value DESC;",
+          "rawSql": "SELECT cr.check_type AS metric, COUNT(*) AS value FROM check_results cr WHERE cr.status = 'FAILED' GROUP BY cr.check_type ORDER BY value DESC;",
           "format": "table",
           "refId": "A"
         }
@@ -287,7 +287,7 @@
       },
       "targets": [
         {
-          "rawSql": "SELECT i.id, p.name AS pipeline, pr.run_id, i.incident_type, i.severity, i.owner, i.retryable, i.failure_summary, i.first_observed_at FROM incidents i JOIN pipeline_runs pr ON pr.id = i.pipeline_run_id JOIN pipelines p ON p.id = pr.pipeline_id WHERE i.status = 'open' ORDER BY i.first_observed_at DESC;",
+          "rawSql": "SELECT i.id, p.name AS pipeline, pr.run_id, i.incident_type, i.severity, i.owner, i.retryable, i.failure_summary, i.first_observed_at FROM incidents i JOIN pipeline_runs pr ON pr.id = i.pipeline_run_id JOIN pipelines p ON p.id = pr.pipeline_id WHERE i.status = 'OPEN' ORDER BY i.first_observed_at DESC;",
           "format": "table",
           "refId": "A"
         }
@@ -313,7 +313,7 @@
       },
       "targets": [
         {
-          "rawSql": "SELECT p.name AS pipeline, pr.run_id, cr.check_type, cr.message, cr.expected, cr.observed, pr.started_at FROM check_results cr JOIN pipeline_runs pr ON pr.id = cr.pipeline_run_id JOIN pipelines p ON p.id = pr.pipeline_id WHERE cr.check_type IN ('schema_compatibility', 'target_schema_compatibility') AND cr.status = 'failed' ORDER BY pr.started_at DESC LIMIT 50;",
+          "rawSql": "SELECT p.name AS pipeline, pr.run_id, cr.check_type, cr.message, cr.expected, cr.observed, pr.started_at FROM check_results cr JOIN pipeline_runs pr ON pr.id = cr.pipeline_run_id JOIN pipelines p ON p.id = pr.pipeline_id WHERE cr.check_type IN ('SCHEMA_COMPATIBILITY', 'TARGET_SCHEMA_COMPATIBILITY') AND cr.status = 'FAILED' ORDER BY pr.started_at DESC LIMIT 50;",
           "format": "table",
           "refId": "A"
         }

@@ -23,7 +23,7 @@ groups:
                 FROM pipeline_runs pr
                 JOIN pipelines p ON p.id = pr.pipeline_id
                 WHERE pr.id IN (SELECT MAX(id) FROM pipeline_runs GROUP BY pipeline_id)
-                  AND pr.status = 'failed'
+                  AND pr.status = 'FAILED'
                 ORDER BY pr.ended_at DESC;
               format: table
               datasource:
@@ -127,7 +127,7 @@ groups:
                 FROM incidents i
                 JOIN pipeline_runs pr ON pr.id = i.pipeline_run_id
                 JOIN pipelines p ON p.id = pr.pipeline_id
-                WHERE i.status = 'open'
+                WHERE i.status = 'OPEN'
                 ORDER BY i.first_observed_at DESC;
               format: table
               datasource:
@@ -174,8 +174,8 @@ groups:
                 FROM check_results cr
                 JOIN pipeline_runs pr ON pr.id = cr.pipeline_run_id
                 JOIN pipelines p ON p.id = pr.pipeline_id
-                WHERE cr.check_type IN ('schema_compatibility', 'target_schema_compatibility')
-                  AND cr.status = 'failed'
+                WHERE cr.check_type IN ('SCHEMA_COMPATIBILITY', 'TARGET_SCHEMA_COMPATIBILITY')
+                  AND cr.status = 'FAILED'
                   AND pr.id IN (
                       SELECT MAX(id)
                       FROM pipeline_runs
