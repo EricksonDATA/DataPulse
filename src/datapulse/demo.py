@@ -23,9 +23,9 @@ from pathlib import Path
 
 # -- Setup -------------------------------------------------------
 
+
 def _setup_test_db():
     """Create a fresh database for the demo (doesn't touch production)."""
-    import datapulse.db.engine as eng
     import datapulse.api.deps as deps
     import datapulse.config as config
 
@@ -48,16 +48,17 @@ def _print_json(data: dict, indent: int = 2):
 
 # -- Demo Steps --------------------------------------------------
 
+
 def run_demo():
     """Run the full Phase 1 demo."""
     db_path = _setup_test_db()
 
-    import datapulse.db.engine as eng
-    from datapulse.logging_config import setup_logging
     import logging
 
-    from datapulse.api.app import app  # import app FIRST (triggers setup_logging)
     from fastapi.testclient import TestClient
+
+    import datapulse.db.engine as eng
+    from datapulse.api.app import app  # import app FIRST (triggers setup_logging)
 
     # Suppress structured logs AFTER app import for cleaner demo output
     logging.getLogger("datapulse").setLevel(logging.CRITICAL)
@@ -78,39 +79,45 @@ def run_demo():
 
     # -- Step 2: Register pipeline -------------------------------
     _print_header("Step 2: Register Pipeline")
-    r = client.post("/pipelines", json={
-        "name": "ecommerce_inventory",
-        "owner": "data-platform",
-    })
+    r = client.post(
+        "/pipelines",
+        json={
+            "name": "ecommerce_inventory",
+            "owner": "data-platform",
+        },
+    )
     print(f"POST /pipelines -> {r.status_code}")
     _print_json(r.json())
 
     # -- Step 3: Register dataset + contract ---------------------
     _print_header("Step 3: Register Dataset + Contract")
-    r = client.post("/datasets", json={
-        "pipeline_name": "ecommerce_inventory",
-        "dataset_name": "inventory_snapshot",
-        "role": "source",
-        "location": "data/inventory/",
-        "contract_version": 1,
-        "schema_definition": {
-            "snapshot_date": {"type": "date", "nullable": False},
-            "product_id": {"type": "integer", "nullable": False},
-            "sku": {"type": "string", "nullable": False},
-            "warehouse_id": {"type": "string", "nullable": False},
-            "stock_on_hand": {"type": "integer", "nullable": False},
-            "reserved_quantity": {"type": "integer", "nullable": False},
-            "reorder_point": {"type": "integer", "nullable": False},
-            "reorder_quantity": {"type": "integer", "nullable": False},
-            "restock_lead_time_days": {"type": "integer", "nullable": False},
-            "unit_cost": {"type": "decimal", "nullable": False},
-            "supplier_id": {"type": "string", "nullable": False},
-            "supplier_name": {"type": "string", "nullable": False},
-            "last_restock_date": {"type": "date", "nullable": False},
+    r = client.post(
+        "/datasets",
+        json={
+            "pipeline_name": "ecommerce_inventory",
+            "dataset_name": "inventory_snapshot",
+            "role": "source",
+            "location": "data/inventory/",
+            "contract_version": 1,
+            "schema_definition": {
+                "snapshot_date": {"type": "date", "nullable": False},
+                "product_id": {"type": "integer", "nullable": False},
+                "sku": {"type": "string", "nullable": False},
+                "warehouse_id": {"type": "string", "nullable": False},
+                "stock_on_hand": {"type": "integer", "nullable": False},
+                "reserved_quantity": {"type": "integer", "nullable": False},
+                "reorder_point": {"type": "integer", "nullable": False},
+                "reorder_quantity": {"type": "integer", "nullable": False},
+                "restock_lead_time_days": {"type": "integer", "nullable": False},
+                "unit_cost": {"type": "decimal", "nullable": False},
+                "supplier_id": {"type": "string", "nullable": False},
+                "supplier_name": {"type": "string", "nullable": False},
+                "last_restock_date": {"type": "date", "nullable": False},
+            },
+            "freshness": {"max_age_hours": 24, "timestamp_column": "snapshot_date"},
+            "quality_rules": {"unique_keys": ["product_id"], "min_row_count": 1, "max_row_count": 50},
         },
-        "freshness": {"max_age_hours": 24, "timestamp_column": "snapshot_date"},
-        "quality_rules": {"unique_keys": ["product_id"], "min_row_count": 1, "max_row_count": 50},
-    })
+    )
     print(f"POST /datasets -> {r.status_code}")
     _print_json(r.json())
 
@@ -119,16 +126,20 @@ def run_demo():
 
     # Generate a fresh fixture with today's date
     from datetime import date
+
     today = date.today().isoformat()
     template = Path("examples/fixtures/inventory_fresh_template.csv")
     fresh_fixture = Path(tempfile.gettempdir()) / f"inventory_fresh_{uuid.uuid4().hex[:6]}.csv"
     fresh_fixture.write_text(template.read_text().replace("TODAY", today), encoding="utf-8")
 
-    r = client.post("/runs", json={
-        "pipeline_name": "ecommerce_inventory",
-        "run_id": "2026-07-27-001",
-        "source_path": str(fresh_fixture),
-    })
+    r = client.post(
+        "/runs",
+        json={
+            "pipeline_name": "ecommerce_inventory",
+            "run_id": "2026-07-27-001",
+            "source_path": str(fresh_fixture),
+        },
+    )
     d = r.json()
     print(f"POST /runs -> {r.status_code}")
     print(f"Run ID:     {d['run_id']}")
@@ -144,11 +155,14 @@ def run_demo():
 
     # -- Step 5: Submit schema-drift run -------------------------
     _print_header("Step 5: Submit Run with Schema Drift")
-    r = client.post("/runs", json={
-        "pipeline_name": "ecommerce_inventory",
-        "run_id": "2026-07-27-002",
-        "source_path": "examples/fixtures/inventory_schema_drift.csv",
-    })
+    r = client.post(
+        "/runs",
+        json={
+            "pipeline_name": "ecommerce_inventory",
+            "run_id": "2026-07-27-002",
+            "source_path": "examples/fixtures/inventory_schema_drift.csv",
+        },
+    )
     d = r.json()
     print(f"POST /runs -> {r.status_code}")
     print(f"Run ID:     {d['run_id']}")
@@ -171,16 +185,19 @@ def run_demo():
 
     # -- Step 6: Idempotency ------------------------------------
     _print_header("Step 6: Re-submit Same Run (Idempotency)")
-    r = client.post("/runs", json={
-        "pipeline_name": "ecommerce_inventory",
-        "run_id": "2026-07-27-001",
-        "source_path": str(fresh_fixture),
-    })
+    r = client.post(
+        "/runs",
+        json={
+            "pipeline_name": "ecommerce_inventory",
+            "run_id": "2026-07-27-001",
+            "source_path": str(fresh_fixture),
+        },
+    )
     d = r.json()
     print(f"POST /runs (same run_id) -> {r.status_code}")
     print(f"Run ID:     {d['run_id']}")
     print(f"Status:     {d['status']}")
-    print(f"No duplicate created - same run returned.")
+    print("No duplicate created - same run returned.")
 
     # -- Step 7: Query health ------------------------------------
     _print_header("Step 7: Query Pipeline Health")
@@ -192,16 +209,19 @@ def run_demo():
 
     # -- Step 8: Run tests ---------------------------------------
     _print_header("Step 8: Run Automated Tests")
-    import subprocess, sys
+    import subprocess
+    import sys
+
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "tests/", "-q", "--tb=line"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     print(result.stdout.strip())
     if result.returncode != 0:
-        print(f"\n[!] Some tests failed!")
+        print("\n[!] Some tests failed!")
     else:
-        print(f"\nAll tests passed.")
+        print("\nAll tests passed.")
 
     # -- Summary -------------------------------------------------
     _print_header("Demo Complete")
@@ -220,9 +240,10 @@ def run_demo():
     print()
 
     # Cleanup
-    if hasattr(client, 'close'):
+    if hasattr(client, "close"):
         client.close()
     import datapulse.api.deps as deps
+
     if deps._engine:
         deps._engine.dispose()
     if db_path.exists():

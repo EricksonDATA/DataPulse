@@ -1,6 +1,6 @@
 """Contract model — versioned schema and quality expectations for a dataset."""
 
-from sqlalchemy import Integer, String, JSON, ForeignKey, UniqueConstraint
+from sqlalchemy import JSON, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from datapulse.db.base import Base
@@ -15,14 +15,10 @@ class Contract(Base):
     """
 
     __tablename__ = "contracts"
-    __table_args__ = (
-        UniqueConstraint("dataset_id", "version", name="uq_contract_version_per_dataset"),
-    )
+    __table_args__ = (UniqueConstraint("dataset_id", "version", name="uq_contract_version_per_dataset"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    dataset_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("datasets.id"), nullable=False
-    )
+    dataset_id: Mapped[int] = mapped_column(Integer, ForeignKey("datasets.id"), nullable=False)
     version: Mapped[int] = mapped_column(Integer, nullable=False)
     schema_definition: Mapped[dict] = mapped_column(JSON, nullable=False)
     freshness: Mapped[dict] = mapped_column(JSON, nullable=False)

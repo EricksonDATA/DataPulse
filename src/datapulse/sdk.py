@@ -14,7 +14,6 @@ Usage:
 """
 
 import logging
-from pathlib import Path
 
 import httpx
 
@@ -56,16 +55,20 @@ class DataPulseClient:
         location: str | None = None,
     ) -> dict:
         """Register a dataset with its contract. Idempotent per version."""
-        return self._request("post", "/datasets", json={
-            "pipeline_name": pipeline_name,
-            "dataset_name": dataset_name,
-            "role": role,
-            "location": location,
-            "contract_version": contract_version,
-            "schema_definition": schema_definition,
-            "freshness": freshness,
-            "quality_rules": quality_rules,
-        })
+        return self._request(
+            "post",
+            "/datasets",
+            json={
+                "pipeline_name": pipeline_name,
+                "dataset_name": dataset_name,
+                "role": role,
+                "location": location,
+                "contract_version": contract_version,
+                "schema_definition": schema_definition,
+                "freshness": freshness,
+                "quality_rules": quality_rules,
+            },
+        )
 
     # ── Run ─────────────────────────────────────────────────────
 

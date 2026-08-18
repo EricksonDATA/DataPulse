@@ -1,8 +1,6 @@
 """Database session dependency for FastAPI."""
 
-from sqlalchemy.orm import Session
-
-from datapulse.db.engine import get_engine, get_session_factory, init_db
+from datapulse.db.engine import get_session_factory, init_db
 
 # Initialize database on import
 _engine = None

@@ -45,17 +45,28 @@ def send_webhook(
         try:
             response = httpx.post(webhook_url, json=payload, timeout=10.0)
             if response.status_code < 400:
-                logger.info("webhook_sent", extra={
-                    "url": webhook_url, "status_code": response.status_code, "attempt": attempt + 1,
-                })
+                logger.info(
+                    "webhook_sent",
+                    extra={
+                        "url": webhook_url,
+                        "status_code": response.status_code,
+                        "attempt": attempt + 1,
+                    },
+                )
                 return {"status": "sent", "status_code": response.status_code, "attempt": attempt + 1}
         except httpx.HTTPError as e:
-            logger.warning("webhook_retry", extra={
-                "url": webhook_url, "error": str(e), "attempt": attempt + 1,
-            })
+            logger.warning(
+                "webhook_retry",
+                extra={
+                    "url": webhook_url,
+                    "error": str(e),
+                    "attempt": attempt + 1,
+                },
+            )
             if attempt < max_retries - 1:
                 import time
-                time.sleep(2 ** attempt)
+
+                time.sleep(2**attempt)
 
     logger.error("webhook_failed", extra={"url": webhook_url, "max_retries": max_retries})
     return {"status": "failed", "error": "max retries exceeded", "attempts": max_retries}

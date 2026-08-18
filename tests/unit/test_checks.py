@@ -2,12 +2,10 @@
 
 from pathlib import Path
 
-import pytest
-
-from datapulse.checks.source_readability import check_source_readability
-from datapulse.checks.schema_compatibility import check_schema_compatibility
-from datapulse.checks.row_count import check_row_count
 from datapulse.checks.freshness import check_freshness
+from datapulse.checks.row_count import check_row_count
+from datapulse.checks.schema_compatibility import check_schema_compatibility
+from datapulse.checks.source_readability import check_source_readability
 from datapulse.models.check_result import CheckStatus
 
 FIXTURES = Path(__file__).resolve().parent.parent.parent / "examples" / "fixtures"
@@ -32,6 +30,7 @@ FRESHNESS = {"max_age_hours": 24, "timestamp_column": "snapshot_date"}
 
 
 # ── Source Readability ──────────────────────────────────────────
+
 
 class TestSourceReadability:
     def test_valid_file_passes(self):
@@ -58,6 +57,7 @@ class TestSourceReadability:
 
 # ── Schema Compatibility ───────────────────────────────────────
 
+
 class TestSchemaCompatibility:
     def test_valid_schema_passes(self):
         result = check_schema_compatibility(FIXTURES / "inventory_valid.csv", SCHEMA_13)
@@ -75,6 +75,7 @@ class TestSchemaCompatibility:
         path = tmp_path / "missing.csv"
         with path.open("w", newline="") as f:
             import csv
+
             w = csv.DictWriter(f, fieldnames=["product_id", "sku"])
             w.writeheader()
             w.writerows(rows)
@@ -89,16 +90,27 @@ class TestSchemaCompatibility:
 
     def test_type_mismatch_fails(self, tmp_path):
         """product_id should be integer but is string."""
-        rows = [{
-            "snapshot_date": "2026-07-27", "product_id": "abc", "sku": "X",
-            "warehouse_id": "WH", "stock_on_hand": "5", "reserved_quantity": "0",
-            "reorder_point": "10", "reorder_quantity": "20", "restock_lead_time_days": "7",
-            "unit_cost": "10.00", "supplier_id": "S1", "supplier_name": "Test",
-            "last_restock_date": "2026-07-20",
-        }]
+        rows = [
+            {
+                "snapshot_date": "2026-07-27",
+                "product_id": "abc",
+                "sku": "X",
+                "warehouse_id": "WH",
+                "stock_on_hand": "5",
+                "reserved_quantity": "0",
+                "reorder_point": "10",
+                "reorder_quantity": "20",
+                "restock_lead_time_days": "7",
+                "unit_cost": "10.00",
+                "supplier_id": "S1",
+                "supplier_name": "Test",
+                "last_restock_date": "2026-07-20",
+            }
+        ]
         path = tmp_path / "bad_type.csv"
         with path.open("w", newline="") as f:
             import csv
+
             w = csv.DictWriter(f, fieldnames=rows[0].keys())
             w.writeheader()
             w.writerows(rows)
@@ -109,20 +121,34 @@ class TestSchemaCompatibility:
 
 # ── Row Count ──────────────────────────────────────────────────
 
+
 class TestRowCount:
     def test_within_range_passes(self):
         result = check_row_count(FIXTURES / "inventory_valid.csv", QUALITY)
         assert result["status"] == CheckStatus.PASSED
 
     def test_below_minimum_fails(self, tmp_path):
-        rows = [{"product_id": "1", "sku": "X", "snapshot_date": "2026-07-27",
-                 "warehouse_id": "WH", "stock_on_hand": "5", "reserved_quantity": "0",
-                 "reorder_point": "10", "reorder_quantity": "20", "restock_lead_time_days": "7",
-                 "unit_cost": "10.00", "supplier_id": "S1", "supplier_name": "Test",
-                 "last_restock_date": "2026-07-20"}]
+        rows = [
+            {
+                "product_id": "1",
+                "sku": "X",
+                "snapshot_date": "2026-07-27",
+                "warehouse_id": "WH",
+                "stock_on_hand": "5",
+                "reserved_quantity": "0",
+                "reorder_point": "10",
+                "reorder_quantity": "20",
+                "restock_lead_time_days": "7",
+                "unit_cost": "10.00",
+                "supplier_id": "S1",
+                "supplier_name": "Test",
+                "last_restock_date": "2026-07-20",
+            }
+        ]
         path = tmp_path / "one_row.csv"
         with path.open("w", newline="") as f:
             import csv
+
             w = csv.DictWriter(f, fieldnames=rows[0].keys())
             w.writeheader()
             w.writerows(rows)
@@ -141,6 +167,7 @@ class TestRowCount:
 
 # ── Freshness ──────────────────────────────────────────────────
 
+
 class TestFreshness:
     def test_stale_data_fails(self):
         """All fixtures use old dates — should fail freshness."""
@@ -151,15 +178,29 @@ class TestFreshness:
     def test_recent_data_passes(self, tmp_path):
         """Create a fixture with today's date."""
         from datetime import date
+
         today = date.today().isoformat()
-        rows = [{"product_id": "1", "sku": "X", "snapshot_date": today,
-                 "warehouse_id": "WH", "stock_on_hand": "5", "reserved_quantity": "0",
-                 "reorder_point": "10", "reorder_quantity": "20", "restock_lead_time_days": "7",
-                 "unit_cost": "10.00", "supplier_id": "S1", "supplier_name": "Test",
-                 "last_restock_date": today}]
+        rows = [
+            {
+                "product_id": "1",
+                "sku": "X",
+                "snapshot_date": today,
+                "warehouse_id": "WH",
+                "stock_on_hand": "5",
+                "reserved_quantity": "0",
+                "reorder_point": "10",
+                "reorder_quantity": "20",
+                "restock_lead_time_days": "7",
+                "unit_cost": "10.00",
+                "supplier_id": "S1",
+                "supplier_name": "Test",
+                "last_restock_date": today,
+            }
+        ]
         path = tmp_path / "fresh.csv"
         with path.open("w", newline="") as f:
             import csv
+
             w = csv.DictWriter(f, fieldnames=rows[0].keys())
             w.writeheader()
             w.writerows(rows)

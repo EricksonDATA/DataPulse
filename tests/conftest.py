@@ -1,21 +1,19 @@
 """Shared test fixtures — reusable setup for all tests."""
 
 import csv
-import io
 import logging
-import tempfile
 import uuid
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from datapulse.db.base import Base
-import datapulse.db.engine as eng
 import datapulse.api.deps as deps
 import datapulse.config as config
+import datapulse.db.engine as eng
+from datapulse.db.base import Base
 from datapulse.models import *  # noqa: F401,F403
 
 
@@ -79,39 +77,50 @@ def client(tmp_path):
 @pytest.fixture()
 def registered_pipeline(client):
     """Register the ecommerce_inventory pipeline and return the response."""
-    return client.post("/pipelines", json={
-        "name": "ecommerce_inventory",
-        "owner": "data-platform",
-    })
+    return client.post(
+        "/pipelines",
+        json={
+            "name": "ecommerce_inventory",
+            "owner": "data-platform",
+        },
+    )
 
 
 @pytest.fixture()
 def registered_dataset(client, registered_pipeline):
     """Register inventory_snapshot dataset + contract and return the response."""
-    return client.post("/datasets", json={
-        "pipeline_name": "ecommerce_inventory",
-        "dataset_name": "inventory_snapshot",
-        "role": "source",
-        "location": "data/inventory/",
-        "contract_version": 1,
-        "schema_definition": {
-            "snapshot_date": {"type": "date", "nullable": False},
-            "product_id": {"type": "integer", "nullable": False},
-            "sku": {"type": "string", "nullable": False},
-            "warehouse_id": {"type": "string", "nullable": False},
-            "stock_on_hand": {"type": "integer", "nullable": False},
-            "reserved_quantity": {"type": "integer", "nullable": False},
-            "reorder_point": {"type": "integer", "nullable": False},
-            "reorder_quantity": {"type": "integer", "nullable": False},
-            "restock_lead_time_days": {"type": "integer", "nullable": False},
-            "unit_cost": {"type": "decimal", "nullable": False},
-            "supplier_id": {"type": "string", "nullable": False},
-            "supplier_name": {"type": "string", "nullable": False},
-            "last_restock_date": {"type": "date", "nullable": False},
+    return client.post(
+        "/datasets",
+        json={
+            "pipeline_name": "ecommerce_inventory",
+            "dataset_name": "inventory_snapshot",
+            "role": "source",
+            "location": "data/inventory/",
+            "contract_version": 1,
+            "schema_definition": {
+                "snapshot_date": {"type": "date", "nullable": False},
+                "product_id": {"type": "integer", "nullable": False},
+                "sku": {"type": "string", "nullable": False},
+                "warehouse_id": {"type": "string", "nullable": False},
+                "stock_on_hand": {"type": "integer", "nullable": False},
+                "reserved_quantity": {"type": "integer", "nullable": False},
+                "reorder_point": {"type": "integer", "nullable": False},
+                "reorder_quantity": {"type": "integer", "nullable": False},
+                "restock_lead_time_days": {"type": "integer", "nullable": False},
+                "unit_cost": {"type": "decimal", "nullable": False},
+                "supplier_id": {"type": "string", "nullable": False},
+                "supplier_name": {"type": "string", "nullable": False},
+                "last_restock_date": {"type": "date", "nullable": False},
+            },
+            "freshness": {"max_age_hours": 24, "timestamp_column": "snapshot_date"},
+            "quality_rules": {
+                "unique_keys": ["product_id"],
+                "min_row_count": 1,
+                "max_row_count": 50,
+                "max_row_count_diff_pct": 5,
+            },
         },
-        "freshness": {"max_age_hours": 24, "timestamp_column": "snapshot_date"},
-        "quality_rules": {"unique_keys": ["product_id"], "min_row_count": 1, "max_row_count": 50, "max_row_count_diff_pct": 5},
-    })
+    )
 
 
 def make_csv(tmp_path: Path, rows: list[dict], filename: str = "test.csv") -> str:

@@ -4,9 +4,9 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from datapulse.models.run import PipelineRun, RunStatus
 from datapulse.models.check_result import CheckResult, CheckStatus, CheckType
 from datapulse.models.incident import Incident, IncidentSeverity, IncidentStatus
+from datapulse.models.run import PipelineRun, RunStatus
 
 
 class RunRepository:
@@ -15,19 +15,11 @@ class RunRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def find_by_pipeline_and_run_id(
-        self, pipeline_id: int, run_id: str
-    ) -> PipelineRun | None:
+    def find_by_pipeline_and_run_id(self, pipeline_id: int, run_id: str) -> PipelineRun | None:
         """Find an existing run by pipeline + run_id (idempotency check)."""
-        return (
-            self.session.query(PipelineRun)
-            .filter_by(pipeline_id=pipeline_id, run_id=run_id)
-            .first()
-        )
+        return self.session.query(PipelineRun).filter_by(pipeline_id=pipeline_id, run_id=run_id).first()
 
-    def create(
-        self, pipeline_id: int, run_id: str, contract_version: int | None = None
-    ) -> PipelineRun:
+    def create(self, pipeline_id: int, run_id: str, contract_version: int | None = None) -> PipelineRun:
         """Create a new run in REGISTERED status."""
         run = PipelineRun(
             pipeline_id=pipeline_id,
@@ -118,11 +110,7 @@ class CheckResultRepository:
 
     def get_for_run(self, pipeline_run_id: int) -> list[CheckResult]:
         """Get all check results for a run."""
-        return (
-            self.session.query(CheckResult)
-            .filter_by(pipeline_run_id=pipeline_run_id)
-            .all()
-        )
+        return self.session.query(CheckResult).filter_by(pipeline_run_id=pipeline_run_id).all()
 
 
 class IncidentRepository:
@@ -157,11 +145,7 @@ class IncidentRepository:
 
     def get_for_run(self, pipeline_run_id: int) -> list[Incident]:
         """Get all incidents for a run."""
-        return (
-            self.session.query(Incident)
-            .filter_by(pipeline_run_id=pipeline_run_id)
-            .all()
-        )
+        return self.session.query(Incident).filter_by(pipeline_run_id=pipeline_run_id).all()
 
     def get_open_for_pipeline(self, pipeline_id: int, limit: int = 20) -> list[Incident]:
         """Get open incidents for a pipeline, newest first."""

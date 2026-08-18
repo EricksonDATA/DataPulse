@@ -2,17 +2,19 @@
 
 from pydantic import BaseModel
 
-
 # ── Request models ──────────────────────────────────────────────
+
 
 class PipelineCreate(BaseModel):
     """Request body for POST /pipelines."""
+
     name: str
     owner: str
 
 
 class DatasetCreate(BaseModel):
     """Request body for POST /datasets."""
+
     pipeline_name: str
     dataset_name: str
     role: str  # 'source' or 'target'
@@ -25,6 +27,7 @@ class DatasetCreate(BaseModel):
 
 class RunSubmit(BaseModel):
     """Request body for POST /runs."""
+
     pipeline_name: str
     run_id: str
     source_path: str
@@ -36,14 +39,17 @@ class RunSubmit(BaseModel):
 
 # ── Response models ─────────────────────────────────────────────
 
+
 class HealthResponse(BaseModel):
     """Response for GET /health."""
+
     status: str
     version: str
 
 
 class PipelineResponse(BaseModel):
     """Response after registering a pipeline."""
+
     id: int
     name: str
     owner: str
@@ -52,6 +58,7 @@ class PipelineResponse(BaseModel):
 
 class DatasetResponse(BaseModel):
     """Response after registering a dataset + contract."""
+
     dataset_id: int
     dataset_name: str
     contract_id: int
@@ -60,6 +67,7 @@ class DatasetResponse(BaseModel):
 
 class CheckResultResponse(BaseModel):
     """One check result within a run."""
+
     type: str
     status: str
     expected: dict | None = None
@@ -69,6 +77,7 @@ class CheckResultResponse(BaseModel):
 
 class IncidentResponse(BaseModel):
     """One incident within a run."""
+
     type: str
     severity: str
     owner: str
@@ -79,6 +88,7 @@ class IncidentResponse(BaseModel):
 
 class RunHealthResponse(BaseModel):
     """Response for run health — the main output of DataPulse."""
+
     run_id: str
     status: str
     started_at: str | None = None
@@ -93,6 +103,7 @@ class RunHealthResponse(BaseModel):
 
 class RunListItem(BaseModel):
     """Summary of a run for list endpoints (no check details)."""
+
     run_id: str
     status: str
     started_at: str | None = None
@@ -106,6 +117,7 @@ class RunListItem(BaseModel):
 
 class IncidentListItem(BaseModel):
     """Incident summary for list endpoints."""
+
     id: int
     run_id: str
     incident_type: str
@@ -119,6 +131,7 @@ class IncidentListItem(BaseModel):
 
 class ContractSummary(BaseModel):
     """Contract summary for the dataset endpoint."""
+
     dataset_name: str
     role: str
     contract_version: int
@@ -129,6 +142,7 @@ class ContractSummary(BaseModel):
 
 class ReadyResponse(BaseModel):
     """Response for GET /ready."""
+
     status: str
     database: str
     version: str

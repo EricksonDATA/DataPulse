@@ -18,9 +18,18 @@ class JSONFormatter(logging.Formatter):
         }
 
         # Merge extra fields attached via logging.LoggerAdapter or extra={}
-        for key in ("run_id", "pipeline", "dataset", "contract_version",
-                     "check_type", "status", "duration_ms", "source_row_count",
-                     "target_row_count", "error_type"):
+        for key in (
+            "run_id",
+            "pipeline",
+            "dataset",
+            "contract_version",
+            "check_type",
+            "status",
+            "duration_ms",
+            "source_row_count",
+            "target_row_count",
+            "error_type",
+        ):
             value = getattr(record, key, None)
             if value is not None:
                 log_entry[key] = value

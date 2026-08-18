@@ -2,9 +2,9 @@
 
 from sqlalchemy.orm import Session
 
-from datapulse.models.pipeline import Pipeline
-from datapulse.models.dataset import Dataset
 from datapulse.models.contract import Contract
+from datapulse.models.dataset import Dataset
+from datapulse.models.pipeline import Pipeline
 
 
 class PipelineRepository:
@@ -33,30 +33,18 @@ class DatasetRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def get_or_create(
-        self, pipeline_id: int, name: str, role: str, location: str | None = None
-    ) -> Dataset:
+    def get_or_create(self, pipeline_id: int, name: str, role: str, location: str | None = None) -> Dataset:
         """Get an existing dataset or create a new one."""
-        dataset = (
-            self.session.query(Dataset)
-            .filter_by(pipeline_id=pipeline_id, name=name)
-            .first()
-        )
+        dataset = self.session.query(Dataset).filter_by(pipeline_id=pipeline_id, name=name).first()
         if dataset is None:
-            dataset = Dataset(
-                pipeline_id=pipeline_id, name=name, role=role, location=location
-            )
+            dataset = Dataset(pipeline_id=pipeline_id, name=name, role=role, location=location)
             self.session.add(dataset)
             self.session.flush()
         return dataset
 
     def get_by_name(self, pipeline_id: int, name: str) -> Dataset | None:
         """Find a dataset by pipeline and name."""
-        return (
-            self.session.query(Dataset)
-            .filter_by(pipeline_id=pipeline_id, name=name)
-            .first()
-        )
+        return self.session.query(Dataset).filter_by(pipeline_id=pipeline_id, name=name).first()
 
 
 class ContractRepository:
@@ -74,11 +62,7 @@ class ContractRepository:
         quality_rules: dict,
     ) -> Contract:
         """Get an existing contract version or create a new one."""
-        contract = (
-            self.session.query(Contract)
-            .filter_by(dataset_id=dataset_id, version=version)
-            .first()
-        )
+        contract = self.session.query(Contract).filter_by(dataset_id=dataset_id, version=version).first()
         if contract is not None:
             return contract
 
@@ -95,17 +79,8 @@ class ContractRepository:
 
     def get_latest(self, dataset_id: int) -> Contract | None:
         """Get the most recent contract version for a dataset."""
-        return (
-            self.session.query(Contract)
-            .filter_by(dataset_id=dataset_id)
-            .order_by(Contract.version.desc())
-            .first()
-        )
+        return self.session.query(Contract).filter_by(dataset_id=dataset_id).order_by(Contract.version.desc()).first()
 
     def get_by_version(self, dataset_id: int, version: int) -> Contract | None:
         """Get a specific contract version for a dataset."""
-        return (
-            self.session.query(Contract)
-            .filter_by(dataset_id=dataset_id, version=version)
-            .first()
-        )
+        return self.session.query(Contract).filter_by(dataset_id=dataset_id, version=version).first()

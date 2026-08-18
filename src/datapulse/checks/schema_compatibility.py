@@ -5,7 +5,6 @@ from pathlib import Path
 
 from datapulse.models.check_result import CheckStatus
 
-
 # Map contract type names to Python validation functions
 TYPE_VALIDATORS = {
     "string": lambda v: isinstance(v, str) and len(v) > 0,
@@ -101,8 +100,7 @@ def check_schema_compatibility(source_path: Path, schema_definition: dict) -> di
             # Type check
             if not validator(value):
                 type_errors.append(
-                    f"Type mismatch in '{col}' at row {row_idx + 1}: "
-                    f"expected {expected_type}, got '{value}'"
+                    f"Type mismatch in '{col}' at row {row_idx + 1}: expected {expected_type}, got '{value}'"
                 )
 
     if null_errors:

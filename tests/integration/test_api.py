@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 FIXTURES = str(Path(__file__).resolve().parent.parent.parent / "examples" / "fixtures")
 
 
@@ -31,28 +29,34 @@ class TestPipelineRegistration:
 
 class TestDatasetRegistration:
     def test_register_dataset(self, client, registered_pipeline):
-        r = client.post("/datasets", json={
-            "pipeline_name": "ecommerce_inventory",
-            "dataset_name": "test_ds",
-            "role": "source",
-            "contract_version": 1,
-            "schema_definition": {"id": {"type": "integer", "nullable": False}},
-            "freshness": {"max_age_hours": 24, "timestamp_column": "id"},
-            "quality_rules": {"unique_keys": ["id"], "min_row_count": 1, "max_row_count": 100},
-        })
+        r = client.post(
+            "/datasets",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "dataset_name": "test_ds",
+                "role": "source",
+                "contract_version": 1,
+                "schema_definition": {"id": {"type": "integer", "nullable": False}},
+                "freshness": {"max_age_hours": 24, "timestamp_column": "id"},
+                "quality_rules": {"unique_keys": ["id"], "min_row_count": 1, "max_row_count": 100},
+            },
+        )
         assert r.status_code == 201
         assert r.json()["contract_version"] == 1
 
     def test_dataset_without_pipeline_returns_404(self, client):
-        r = client.post("/datasets", json={
-            "pipeline_name": "nonexistent",
-            "dataset_name": "ds",
-            "role": "source",
-            "contract_version": 1,
-            "schema_definition": {},
-            "freshness": {},
-            "quality_rules": {},
-        })
+        r = client.post(
+            "/datasets",
+            json={
+                "pipeline_name": "nonexistent",
+                "dataset_name": "ds",
+                "role": "source",
+                "contract_version": 1,
+                "schema_definition": {},
+                "freshness": {},
+                "quality_rules": {},
+            },
+        )
         assert r.status_code == 404
         assert "not found" in r.json()["detail"].lower()
 
@@ -75,11 +79,14 @@ class TestDatasetRegistration:
 
 class TestRunLifecycle:
     def test_valid_run_passes(self, client, registered_dataset):
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-valid",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-valid",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+            },
+        )
         d = r.json()
         assert r.status_code == 201
         assert len(d["checks"]) == 5
@@ -88,11 +95,14 @@ class TestRunLifecycle:
         assert readability["status"] == "passed"
 
     def test_schema_drift_creates_incident(self, client, registered_dataset):
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-drift",
-            "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-drift",
+                "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+            },
+        )
         d = r.json()
         assert r.status_code == 201
         # Schema check should fail
@@ -106,11 +116,14 @@ class TestRunLifecycle:
         assert inc["retryable"] is True
 
     def test_missing_file_fails_clearly(self, client, registered_dataset):
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-missing",
-            "source_path": "nonexistent.csv",
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-missing",
+                "source_path": "nonexistent.csv",
+            },
+        )
         d = r.json()
         assert r.status_code == 201
         assert d["status"] == "failed"
@@ -122,11 +135,14 @@ class TestRunLifecycle:
         assert "not found" in readability["message"].lower()
 
     def test_run_without_pipeline_returns_400(self, client, registered_dataset):
-        r = client.post("/runs", json={
-            "pipeline_name": "nonexistent",
-            "run_id": "run-x",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "nonexistent",
+                "run_id": "run-x",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+            },
+        )
         assert r.status_code == 400
 
     def test_duplicate_run_is_idempotent(self, client, registered_dataset):
@@ -146,11 +162,14 @@ class TestRunLifecycle:
 class TestGetRunHealth:
     def test_get_existing_run(self, client, registered_dataset):
         # Submit a run first
-        client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-get",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-        })
+        client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-get",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+            },
+        )
         r = client.get("/pipelines/ecommerce_inventory/runs/run-get")
         assert r.status_code == 200
         assert r.json()["run_id"] == "run-get"
@@ -167,11 +186,14 @@ class TestGetRunHealth:
 
 class TestPipelineHealth:
     def test_latest_health(self, client, registered_dataset):
-        client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-h1",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-        })
+        client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-h1",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+            },
+        )
         r = client.get("/pipelines/ecommerce_inventory/health")
         assert r.status_code == 200
         assert r.json()["run_id"] == "run-h1"
@@ -183,11 +205,14 @@ class TestPipelineHealth:
 
 class TestIncidentFields:
     def test_incident_has_all_required_fields(self, client, registered_dataset):
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-inc",
-            "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-inc",
+                "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+            },
+        )
         d = r.json()
         assert len(d["incidents"]) >= 1
         inc = d["incidents"][0]
@@ -197,11 +222,14 @@ class TestIncidentFields:
 
 class TestCheckResultFields:
     def test_check_results_have_expected_and_observed(self, client, registered_dataset):
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-chk",
-            "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-chk",
+                "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+            },
+        )
         d = r.json()
         for check in d["checks"]:
             if check["status"] == "failed":
@@ -212,11 +240,14 @@ class TestCheckResultFields:
 
 class TestTimestampsUTC:
     def test_started_at_and_ended_at_present(self, client, registered_dataset):
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-ts",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-ts",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+            },
+        )
         d = r.json()
         assert d["started_at"] is not None
         assert d["ended_at"] is not None
@@ -231,50 +262,59 @@ class TestContractVersionEnforcement:
         Same 5-row file: v1 passes, v2 fails on row count.
         """
         # Register version 2 with a very tight row count limit
-        r = client.post("/datasets", json={
-            "pipeline_name": "ecommerce_inventory",
-            "dataset_name": "inventory_snapshot",
-            "role": "source",
-            "contract_version": 2,
-            "schema_definition": {
-                "snapshot_date": {"type": "date", "nullable": False},
-                "product_id": {"type": "integer", "nullable": False},
-                "sku": {"type": "string", "nullable": False},
-                "warehouse_id": {"type": "string", "nullable": False},
-                "stock_on_hand": {"type": "integer", "nullable": False},
-                "reserved_quantity": {"type": "integer", "nullable": False},
-                "reorder_point": {"type": "integer", "nullable": False},
-                "reorder_quantity": {"type": "integer", "nullable": False},
-                "restock_lead_time_days": {"type": "integer", "nullable": False},
-                "unit_cost": {"type": "decimal", "nullable": False},
-                "supplier_id": {"type": "string", "nullable": False},
-                "supplier_name": {"type": "string", "nullable": False},
-                "last_restock_date": {"type": "date", "nullable": False},
+        r = client.post(
+            "/datasets",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "dataset_name": "inventory_snapshot",
+                "role": "source",
+                "contract_version": 2,
+                "schema_definition": {
+                    "snapshot_date": {"type": "date", "nullable": False},
+                    "product_id": {"type": "integer", "nullable": False},
+                    "sku": {"type": "string", "nullable": False},
+                    "warehouse_id": {"type": "string", "nullable": False},
+                    "stock_on_hand": {"type": "integer", "nullable": False},
+                    "reserved_quantity": {"type": "integer", "nullable": False},
+                    "reorder_point": {"type": "integer", "nullable": False},
+                    "reorder_quantity": {"type": "integer", "nullable": False},
+                    "restock_lead_time_days": {"type": "integer", "nullable": False},
+                    "unit_cost": {"type": "decimal", "nullable": False},
+                    "supplier_id": {"type": "string", "nullable": False},
+                    "supplier_name": {"type": "string", "nullable": False},
+                    "last_restock_date": {"type": "date", "nullable": False},
+                },
+                "freshness": {"max_age_hours": 99999, "timestamp_column": "snapshot_date"},
+                "quality_rules": {"unique_keys": ["product_id"], "min_row_count": 1, "max_row_count": 2},
             },
-            "freshness": {"max_age_hours": 99999, "timestamp_column": "snapshot_date"},
-            "quality_rules": {"unique_keys": ["product_id"], "min_row_count": 1, "max_row_count": 2},
-        })
+        )
         assert r.status_code == 201
 
         # Version 1 (max_row_count=50) should pass with 5-row fixture
-        r1 = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-v1",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-            "contract_version": 1,
-        })
+        r1 = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-v1",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "contract_version": 1,
+            },
+        )
         assert r1.status_code == 201
         assert r1.json()["contract_version"] == 1
         row_check_v1 = next(c for c in r1.json()["checks"] if c["type"] == "row_count")
         assert row_check_v1["status"] == "passed"
 
         # Version 2 (max_row_count=2) should fail with same 5-row fixture
-        r2 = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-v2",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-            "contract_version": 2,
-        })
+        r2 = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-v2",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "contract_version": 2,
+            },
+        )
         assert r2.status_code == 201
         assert r2.json()["contract_version"] == 2
         row_check_v2 = next(c for c in r2.json()["checks"] if c["type"] == "row_count")
@@ -282,12 +322,15 @@ class TestContractVersionEnforcement:
 
     def test_nonexistent_version_returns_400(self, client, registered_dataset):
         """Requesting a version that doesn't exist should fail."""
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-ver-99",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-            "contract_version": 99,
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-ver-99",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "contract_version": 99,
+            },
+        )
         assert r.status_code == 400
         assert "version 99 not found" in r.json()["detail"].lower()
 
@@ -295,11 +338,14 @@ class TestContractVersionEnforcement:
 class TestDuplicateKeyValidation:
     def test_no_duplicates_passes(self, client, registered_dataset):
         """Valid fixture has unique product_ids — should pass."""
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-nodup",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-nodup",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+            },
+        )
         d = r.json()
         row_check = next(c for c in d["checks"] if c["type"] == "row_count")
         assert row_check["status"] == "passed"
@@ -316,11 +362,14 @@ class TestDuplicateKeyValidation:
         dup_file = tmp_path / "duplicates.csv"
         dup_file.write_text("\n".join(rows), encoding="utf-8")
 
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-dup",
-            "source_path": str(dup_file),
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-dup",
+                "source_path": str(dup_file),
+            },
+        )
         d = r.json()
         row_check = next(c for c in d["checks"] if c["type"] == "row_count")
         assert row_check["status"] == "failed"
@@ -333,29 +382,35 @@ class TestTargetSchemaSkipped:
     def test_no_target_returns_skipped(self, client, registered_dataset):
         """When no target_path is given, target_schema_compatibility should be skipped."""
         # Register a target dataset so the check type is active
-        r = client.post("/datasets", json={
-            "pipeline_name": "ecommerce_inventory",
-            "dataset_name": "inventory_target",
-            "role": "target",
-            "contract_version": 1,
-            "schema_definition": {
-                "snapshot_date": {"type": "date", "nullable": False},
-                "product_id": {"type": "integer", "nullable": False},
-                "sku": {"type": "string", "nullable": False},
-                "warehouse_id": {"type": "string", "nullable": False},
-                "stock_on_hand": {"type": "integer", "nullable": False},
+        r = client.post(
+            "/datasets",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "dataset_name": "inventory_target",
+                "role": "target",
+                "contract_version": 1,
+                "schema_definition": {
+                    "snapshot_date": {"type": "date", "nullable": False},
+                    "product_id": {"type": "integer", "nullable": False},
+                    "sku": {"type": "string", "nullable": False},
+                    "warehouse_id": {"type": "string", "nullable": False},
+                    "stock_on_hand": {"type": "integer", "nullable": False},
+                },
+                "freshness": {"max_age_hours": 24, "timestamp_column": "snapshot_date"},
+                "quality_rules": {"unique_keys": ["product_id"], "min_row_count": 1, "max_row_count": 100},
             },
-            "freshness": {"max_age_hours": 24, "timestamp_column": "snapshot_date"},
-            "quality_rules": {"unique_keys": ["product_id"], "min_row_count": 1, "max_row_count": 100},
-        })
+        )
         assert r.status_code == 201
 
         # Run with source only — no target_path
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-tgt-skip",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-tgt-skip",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+            },
+        )
         d = r.json()
         assert r.status_code == 201
 
@@ -375,12 +430,15 @@ class TestSourceToTargetReconciliation:
         src.write_text(content, encoding="utf-8")
         tgt.write_text(content, encoding="utf-8")
 
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-recon-ok",
-            "source_path": str(src),
-            "target_path": str(tgt),
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-recon-ok",
+                "source_path": str(src),
+                "target_path": str(tgt),
+            },
+        )
         d = r.json()
         row_check = next(c for c in d["checks"] if c["type"] == "row_count")
         assert row_check["status"] == "passed"
@@ -395,12 +453,15 @@ class TestSourceToTargetReconciliation:
         src.write_text(f"{header}\n{row1}\n{row2}\n", encoding="utf-8")
         tgt.write_text(f"{header}\n{row1}\n", encoding="utf-8")
 
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-recon-fail",
-            "source_path": str(src),
-            "target_path": str(tgt),
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-recon-fail",
+                "source_path": str(src),
+                "target_path": str(tgt),
+            },
+        )
         d = r.json()
         row_check = next(c for c in d["checks"] if c["type"] == "row_count")
         assert row_check["status"] == "failed"
@@ -408,12 +469,15 @@ class TestSourceToTargetReconciliation:
 
     def test_missing_target_file_fails(self, client, registered_dataset):
         """Providing a target_path that doesn't exist should fail clearly."""
-        r = client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-no-tgt",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-            "target_path": "nonexistent_target.csv",
-        })
+        r = client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-no-tgt",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "target_path": "nonexistent_target.csv",
+            },
+        )
         d = r.json()
         row_check = next(c for c in d["checks"] if c["type"] == "row_count")
         assert row_check["status"] == "failed"
@@ -431,11 +495,14 @@ class TestListRuns:
 
     def test_list_runs_after_submissions(self, client, registered_dataset):
         for i in range(3):
-            client.post("/runs", json={
-                "pipeline_name": "ecommerce_inventory",
-                "run_id": f"run-list-{i}",
-                "source_path": f"{FIXTURES}/inventory_valid.csv",
-            })
+            client.post(
+                "/runs",
+                json={
+                    "pipeline_name": "ecommerce_inventory",
+                    "run_id": f"run-list-{i}",
+                    "source_path": f"{FIXTURES}/inventory_valid.csv",
+                },
+            )
         r = client.get("/pipelines/ecommerce_inventory/runs")
         assert r.status_code == 200
         runs = r.json()
@@ -449,16 +516,22 @@ class TestListRuns:
             assert "started_at" in run
 
     def test_list_runs_status_filter(self, client, registered_dataset):
-        client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-pass",
-            "source_path": f"{FIXTURES}/inventory_valid.csv",
-        })
-        client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-fail",
-            "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
-        })
+        client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-pass",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+            },
+        )
+        client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-fail",
+                "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+            },
+        )
         r = client.get("/pipelines/ecommerce_inventory/runs?status=failed")
         assert r.status_code == 200
         runs = r.json()
@@ -478,11 +551,14 @@ class TestListIncidents:
         assert r.json() == []
 
     def test_list_incidents_after_failure(self, client, registered_dataset):
-        client.post("/runs", json={
-            "pipeline_name": "ecommerce_inventory",
-            "run_id": "run-inc-list",
-            "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
-        })
+        client.post(
+            "/runs",
+            json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": "run-inc-list",
+                "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+            },
+        )
         r = client.get("/pipelines/ecommerce_inventory/incidents")
         assert r.status_code == 200
         incidents = r.json()

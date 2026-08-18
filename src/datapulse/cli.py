@@ -1,7 +1,6 @@
 """DataPulse CLI — entry point for commands."""
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -9,18 +8,21 @@ from pathlib import Path
 def cmd_demo(args):
     """Run the Phase 1 demo."""
     from datapulse.demo import run_demo
+
     run_demo()
 
 
 def cmd_serve(args):
     """Start the API server."""
     import uvicorn
+
     uvicorn.run("datapulse.api.app:app", host=args.host, port=args.port, reload=args.reload)
 
 
 def cmd_test(args):
     """Run the test suite."""
     import subprocess
+
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "tests/", "-v", "--tb=short"],
         cwd=Path(__file__).resolve().parent.parent.parent,

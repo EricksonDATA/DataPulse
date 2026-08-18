@@ -3,27 +3,26 @@
 import logging
 from pathlib import Path
 
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
 from datapulse.api.deps import get_db
-from datapulse.logging_config import setup_logging
 from datapulse.api.schemas import (
-    PipelineCreate,
+    ContractSummary,
     DatasetCreate,
-    RunSubmit,
-    HealthResponse,
-    PipelineResponse,
     DatasetResponse,
+    HealthResponse,
+    IncidentListItem,
+    PipelineCreate,
+    PipelineResponse,
+    ReadyResponse,
     RunHealthResponse,
     RunListItem,
-    IncidentListItem,
-    ContractSummary,
-    ReadyResponse,
+    RunSubmit,
 )
-from datapulse.db.repositories import PipelineRepository, DatasetRepository, ContractRepository
-from datapulse.db.run_repositories import RunRepository, IncidentRepository, CheckResultRepository
+from datapulse.db.repositories import ContractRepository, DatasetRepository, PipelineRepository
+from datapulse.db.run_repositories import IncidentRepository, RunRepository
+from datapulse.logging_config import setup_logging
 from datapulse.services.run_service import RunService
 
 app = FastAPI(
@@ -39,6 +38,7 @@ logger = logging.getLogger("datapulse.api")
 
 # ── GET /health ─────────────────────────────────────────────────
 
+
 @app.get("/health", response_model=HealthResponse)
 def health():
     """Confirm the API is available."""
@@ -46,6 +46,7 @@ def health():
 
 
 # ── POST /pipelines ─────────────────────────────────────────────
+
 
 @app.post("/pipelines", response_model=PipelineResponse, status_code=201)
 def register_pipeline(data: PipelineCreate, db: Session = Depends(get_db)):
@@ -61,6 +62,7 @@ def register_pipeline(data: PipelineCreate, db: Session = Depends(get_db)):
 
 
 # ── POST /datasets ──────────────────────────────────────────────
+
 
 @app.post("/datasets", response_model=DatasetResponse, status_code=201)
 def register_dataset(data: DatasetCreate, db: Session = Depends(get_db)):
@@ -97,6 +99,7 @@ def register_dataset(data: DatasetCreate, db: Session = Depends(get_db)):
 
 # ── POST /runs ──────────────────────────────────────────────────
 
+
 @app.post("/runs", response_model=RunHealthResponse, status_code=201)
 def submit_run(data: RunSubmit, db: Session = Depends(get_db)):
     """Submit a pipeline run. Idempotent — same run_id returns existing result."""
@@ -122,6 +125,7 @@ def submit_run(data: RunSubmit, db: Session = Depends(get_db)):
 
 # ── GET /pipelines/{name}/runs/{run_id} ─────────────────────────
 
+
 @app.get("/pipelines/{name}/runs/{run_id}", response_model=RunHealthResponse)
 def get_run_health(name: str, run_id: str, db: Session = Depends(get_db)):
     """Retrieve one run's health summary."""
@@ -141,6 +145,7 @@ def get_run_health(name: str, run_id: str, db: Session = Depends(get_db)):
 
 # ── GET /pipelines/{name}/health ────────────────────────────────
 
+
 @app.get("/pipelines/{name}/health", response_model=RunHealthResponse)
 def get_pipeline_health(name: str, db: Session = Depends(get_db)):
     """Retrieve the latest health for a pipeline."""
@@ -159,6 +164,7 @@ def get_pipeline_health(name: str, db: Session = Depends(get_db)):
 
 
 # ── GET /pipelines/{name}/runs ─────────────────────────────────
+
 
 @app.get("/pipelines/{name}/runs", response_model=list[RunListItem])
 def list_pipeline_runs(
@@ -187,21 +193,24 @@ def list_pipeline_runs(
         duration_ms = None
         if run.started_at and run.ended_at:
             duration_ms = int((run.ended_at - run.started_at).total_seconds() * 1000)
-        result.append(RunListItem(
-            run_id=run.run_id,
-            status=run.status.value,
-            started_at=run.started_at.isoformat() if run.started_at else None,
-            ended_at=run.ended_at.isoformat() if run.ended_at else None,
-            duration_ms=duration_ms,
-            source_row_count=run.source_row_count,
-            target_row_count=run.target_row_count,
-            failure_reason=run.failure_reason,
-            contract_version=run.contract_version,
-        ))
+        result.append(
+            RunListItem(
+                run_id=run.run_id,
+                status=run.status.value,
+                started_at=run.started_at.isoformat() if run.started_at else None,
+                ended_at=run.ended_at.isoformat() if run.ended_at else None,
+                duration_ms=duration_ms,
+                source_row_count=run.source_row_count,
+                target_row_count=run.target_row_count,
+                failure_reason=run.failure_reason,
+                contract_version=run.contract_version,
+            )
+        )
     return result
 
 
 # ── GET /pipelines/{name}/incidents ────────────────────────────
+
 
 @app.get("/pipelines/{name}/incidents", response_model=list[IncidentListItem])
 def list_pipeline_incidents(
@@ -239,6 +248,7 @@ def list_pipeline_incidents(
 
 # ── GET /datasets/{name}/contract ──────────────────────────────
 
+
 @app.get("/datasets/{name}/contract", response_model=ContractSummary)
 def get_dataset_contract(
     name: str,
@@ -256,6 +266,7 @@ def get_dataset_contract(
             dataset = dataset_repo.get_by_name(pipeline.id, name)
     else:
         from datapulse.models.dataset import Dataset as DatasetModel
+
         dataset = db.query(DatasetModel).filter_by(name=name).first()
 
     if dataset is None:
@@ -278,11 +289,13 @@ def get_dataset_contract(
 
 # ── GET /ready ─────────────────────────────────────────────────
 
+
 @app.get("/ready", response_model=ReadyResponse)
 def readiness(db: Session = Depends(get_db)):
     """Confirm the API and database are ready."""
     try:
         from sqlalchemy import text
+
         db.execute(text("SELECT 1"))
         db_status = "ok"
     except Exception:
@@ -295,6 +308,7 @@ def readiness(db: Session = Depends(get_db)):
 
 
 # ── POST /runs/{run_id}/acknowledge ────────────────────────────
+
 
 @app.post("/runs/{run_id}/acknowledge")
 def acknowledge_run(run_id: str, db: Session = Depends(get_db)):
@@ -309,6 +323,7 @@ def acknowledge_run(run_id: str, db: Session = Depends(get_db)):
     acknowledged = 0
     for inc in incidents:
         from datapulse.models.incident import IncidentStatus
+
         if inc.status == IncidentStatus.OPEN:
             inc.status = IncidentStatus.ACKNOWLEDGED
             acknowledged += 1
@@ -320,6 +335,7 @@ def acknowledge_run(run_id: str, db: Session = Depends(get_db)):
 # ── POST /webhook/receiver ─────────────────────────────────────
 
 _webhook_log: list[dict] = []
+
 
 @app.post("/webhook/receiver")
 def webhook_receiver(payload: dict):

@@ -10,6 +10,7 @@ def get_engine(url: str | None = None):
     """Create a SQLAlchemy engine. Uses config DATABASE_URL if no url provided."""
     if url is None:
         from datapulse.config import DATABASE_URL
+
         url = DATABASE_URL
     return create_engine(url, echo=False)
 
@@ -27,5 +28,6 @@ def init_db(engine=None):
         engine = get_engine()
     # Import all models so Base.metadata knows about them
     import datapulse.models  # noqa: F401
+
     Base.metadata.create_all(engine)
     return engine

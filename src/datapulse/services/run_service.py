@@ -6,11 +6,11 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
-from datapulse.db.repositories import PipelineRepository, DatasetRepository, ContractRepository
-from datapulse.db.run_repositories import RunRepository, CheckResultRepository, IncidentRepository
-from datapulse.models.run import RunStatus
+from datapulse.db.repositories import ContractRepository, DatasetRepository, PipelineRepository
+from datapulse.db.run_repositories import CheckResultRepository, IncidentRepository, RunRepository
 from datapulse.models.check_result import CheckStatus, CheckType
 from datapulse.models.incident import IncidentSeverity
+from datapulse.models.run import RunStatus
 
 logger = logging.getLogger("datapulse.run_service")
 
@@ -108,7 +108,15 @@ class RunService:
         self.run_repo.update_status(run, RunStatus.RUNNING)
         self.session.commit()
         run_start = time.monotonic()
-        logger.info("run_started", extra={"run_id": run_id, "pipeline": pipeline_name, "dataset": dataset_name, "contract_version": effective_version})
+        logger.info(
+            "run_started",
+            extra={
+                "run_id": run_id,
+                "pipeline": pipeline_name,
+                "dataset": dataset_name,
+                "contract_version": effective_version,
+            },
+        )
 
         # 5. Execute checks in deterministic order
         all_passed = True
@@ -137,10 +145,16 @@ class RunService:
                 message=result.get("message"),
             )
             self.session.commit()
-            logger.info("check_completed", extra={
-                "run_id": run_id, "pipeline": pipeline_name, "dataset": dataset_name,
-                "check_type": check_type.value, "status": result["status"].value,
-            })
+            logger.info(
+                "check_completed",
+                extra={
+                    "run_id": run_id,
+                    "pipeline": pipeline_name,
+                    "dataset": dataset_name,
+                    "check_type": check_type.value,
+                    "status": result["status"].value,
+                },
+            )
 
             if result["status"] == CheckStatus.FAILED:
                 all_passed = False
@@ -189,19 +203,31 @@ class RunService:
                 retryable=True,
                 failure_summary=failure_reason,
             )
-            logger.warning("incident_created", extra={
-                "run_id": run_id, "pipeline": pipeline_name, "status": final_status.value,
-                "error_type": "contract_violation" if final_status == RunStatus.FAILED else "late_arrival",
-            })
+            logger.warning(
+                "incident_created",
+                extra={
+                    "run_id": run_id,
+                    "pipeline": pipeline_name,
+                    "status": final_status.value,
+                    "error_type": "contract_violation" if final_status == RunStatus.FAILED else "late_arrival",
+                },
+            )
 
         self.session.commit()
         duration_ms = int((time.monotonic() - run_start) * 1000)
-        logger.info("run_completed", extra={
-            "run_id": run_id, "pipeline": pipeline_name, "dataset": dataset_name,
-            "contract_version": effective_version, "status": final_status.value,
-            "duration_ms": duration_ms, "source_row_count": source_row_count,
-            "target_row_count": target_row_count,
-        })
+        logger.info(
+            "run_completed",
+            extra={
+                "run_id": run_id,
+                "pipeline": pipeline_name,
+                "dataset": dataset_name,
+                "contract_version": effective_version,
+                "status": final_status.value,
+                "duration_ms": duration_ms,
+                "source_row_count": source_row_count,
+                "target_row_count": target_row_count,
+            },
+        )
 
         return self._build_health_summary(run)
 
@@ -215,10 +241,10 @@ class RunService:
         target_contract=None,
     ) -> dict:
         """Execute a single check and return the result dict."""
-        from datapulse.checks.source_readability import check_source_readability
-        from datapulse.checks.schema_compatibility import check_schema_compatibility
-        from datapulse.checks.row_count import check_row_count
         from datapulse.checks.freshness import check_freshness
+        from datapulse.checks.row_count import check_row_count
+        from datapulse.checks.schema_compatibility import check_schema_compatibility
+        from datapulse.checks.source_readability import check_source_readability
 
         if check_type == CheckType.SOURCE_READABILITY:
             return check_source_readability(source_path)

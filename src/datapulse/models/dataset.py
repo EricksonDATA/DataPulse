@@ -1,6 +1,6 @@
 """Dataset model — a source or target dataset within a pipeline."""
 
-from sqlalchemy import Integer, String, ForeignKey, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from datapulse.db.base import Base
@@ -15,14 +15,10 @@ class Dataset(Base):
     """
 
     __tablename__ = "datasets"
-    __table_args__ = (
-        UniqueConstraint("pipeline_id", "name", name="uq_dataset_per_pipeline"),
-    )
+    __table_args__ = (UniqueConstraint("pipeline_id", "name", name="uq_dataset_per_pipeline"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    pipeline_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("pipelines.id"), nullable=False
-    )
+    pipeline_id: Mapped[int] = mapped_column(Integer, ForeignKey("pipelines.id"), nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     role: Mapped[str] = mapped_column(String, nullable=False)  # 'source' or 'target'
     location: Mapped[str | None] = mapped_column(String, nullable=True)

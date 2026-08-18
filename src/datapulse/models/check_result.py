@@ -2,7 +2,7 @@
 
 import enum
 
-from sqlalchemy import Integer, String, JSON, Enum, ForeignKey, Index
+from sqlalchemy import JSON, Enum, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from datapulse.db.base import Base
@@ -35,14 +35,10 @@ class CheckResult(Base):
     """
 
     __tablename__ = "check_results"
-    __table_args__ = (
-        Index("ix_checks_run_type", "pipeline_run_id", "check_type"),
-    )
+    __table_args__ = (Index("ix_checks_run_type", "pipeline_run_id", "check_type"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    pipeline_run_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("pipeline_runs.id"), nullable=False
-    )
+    pipeline_run_id: Mapped[int] = mapped_column(Integer, ForeignKey("pipeline_runs.id"), nullable=False)
     check_type: Mapped[CheckType] = mapped_column(Enum(CheckType), nullable=False)
     status: Mapped[CheckStatus] = mapped_column(Enum(CheckStatus), nullable=False)
     expected: Mapped[dict | None] = mapped_column(JSON, nullable=True)

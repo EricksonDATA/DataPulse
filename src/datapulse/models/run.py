@@ -3,7 +3,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import Integer, String, DateTime, Enum, ForeignKey, UniqueConstraint, Text, Index
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from datapulse.db.base import Base
@@ -34,13 +34,9 @@ class PipelineRun(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    pipeline_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("pipelines.id"), nullable=False
-    )
+    pipeline_id: Mapped[int] = mapped_column(Integer, ForeignKey("pipelines.id"), nullable=False)
     run_id: Mapped[str] = mapped_column(String, nullable=False)
-    status: Mapped[RunStatus] = mapped_column(
-        Enum(RunStatus), default=RunStatus.REGISTERED, nullable=False
-    )
+    status: Mapped[RunStatus] = mapped_column(Enum(RunStatus), default=RunStatus.REGISTERED, nullable=False)
     source_row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     target_row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     failure_reason: Mapped[str | None] = mapped_column(Text, nullable=True)

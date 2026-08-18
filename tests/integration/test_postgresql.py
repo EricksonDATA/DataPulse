@@ -32,6 +32,7 @@ class TestPostgreSQLConnection:
     def test_connects_to_postgresql(self, pg_engine):
         """Verify we can connect and run a query."""
         from sqlalchemy import text
+
         with pg_engine.connect() as conn:
             result = conn.execute(text("SELECT 1"))
             assert result.scalar() == 1
@@ -70,10 +71,7 @@ class TestPostgreSQLConnection:
         assert any("name" in uq["column_names"] for uq in pipeline_uqs)
 
         run_uqs = inspector.get_unique_constraints("pipeline_runs")
-        assert any(
-            set(uq["column_names"]) == {"pipeline_id", "run_id"}
-            for uq in run_uqs
-        )
+        assert any(set(uq["column_names"]) == {"pipeline_id", "run_id"} for uq in run_uqs)
 
     def test_foreign_keys_exist(self, pg_engine):
         """Verify foreign key relationships are present."""
@@ -88,7 +86,6 @@ class TestPostgreSQLAPILifecycle:
 
     def test_full_run_lifecycle(self):
         """Register pipeline, dataset, submit run — all against PostgreSQL."""
-        import datapulse.config as config
         import datapulse.api.deps as deps
         import datapulse.db.engine as eng
 
@@ -100,8 +97,9 @@ class TestPostgreSQLAPILifecycle:
         deps._engine = fresh_engine
         deps._session_factory = eng.get_session_factory(fresh_engine)
 
-        from datapulse.api.app import app
         from fastapi.testclient import TestClient
+
+        from datapulse.api.app import app
 
         client = TestClient(app)
 
@@ -109,20 +107,25 @@ class TestPostgreSQLAPILifecycle:
         r = client.post("/pipelines", json={"name": "pg_lifecycle_test", "owner": "test"})
         assert r.status_code == 201
 
-        r = client.post("/datasets", json={
-            "pipeline_name": "pg_lifecycle_test",
-            "dataset_name": "test_ds",
-            "role": "source",
-            "contract_version": 1,
-            "schema_definition": {"id": {"type": "integer", "nullable": False}},
-            "freshness": {"max_age_hours": 99999, "timestamp_column": "id"},
-            "quality_rules": {"unique_keys": ["id"], "min_row_count": 1, "max_row_count": 100},
-        })
+        r = client.post(
+            "/datasets",
+            json={
+                "pipeline_name": "pg_lifecycle_test",
+                "dataset_name": "test_ds",
+                "role": "source",
+                "contract_version": 1,
+                "schema_definition": {"id": {"type": "integer", "nullable": False}},
+                "freshness": {"max_age_hours": 99999, "timestamp_column": "id"},
+                "quality_rules": {"unique_keys": ["id"], "min_row_count": 1, "max_row_count": 100},
+            },
+        )
         assert r.status_code == 201
 
         # Verify data persisted in PostgreSQL
-        from datapulse.db.repositories import PipelineRepository
         from sqlalchemy.orm import sessionmaker
+
+        from datapulse.db.repositories import PipelineRepository
+
         Session = sessionmaker(bind=fresh_engine)
         with Session() as session:
             repo = PipelineRepository(session)
