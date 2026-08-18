@@ -65,19 +65,23 @@ groups:
             datasourceUid: datapulse-pg
             model:
               rawSql: >
-                WITH latest AS (
-                  SELECT pipeline_id, MAX(id) AS max_id
-                  FROM pipeline_runs
-                  WHERE ended_at IS NOT NULL
-                  GROUP BY pipeline_id
-                )
-                SELECT p.name AS pipeline,
-                       EXTRACT(EPOCH FROM (NOW() - pr.ended_at)) / 3600.0 AS age_hours,
-                       pr.ended_at AS "time"
-                FROM pipeline_runs pr
+                SELECT
+                    p.name AS pipeline,
+                    (cr.observed->>'age_hours')::numeric AS age_hours,
+                    (cr.expected->>'max_age_hours')::numeric AS threshold_hours,
+                    pr.started_at AS "time"
+                FROM check_results cr
+                JOIN pipeline_runs pr ON pr.id = cr.pipeline_run_id
                 JOIN pipelines p ON p.id = pr.pipeline_id
-                JOIN latest l ON l.max_id = pr.id
-                WHERE EXTRACT(EPOCH FROM (NOW() - pr.ended_at)) / 3600.0 > 24;
+                WHERE cr.check_type = 'FRESHNESS'
+                  AND cr.status = 'FAILED'
+                  AND pr.id IN (
+                      SELECT MAX(id)
+                      FROM pipeline_runs
+                      GROUP BY pipeline_id
+                  )
+                  AND (cr.observed->>'age_hours')::numeric >
+                      (cr.expected->>'max_age_hours')::numeric;
               format: table
               datasource:
                 type: grafana-postgresql-datasource
@@ -153,7 +157,7 @@ groups:
           summary: "{{ $values.A }} open incident(s) detected"
           runbook: "Check /pipelines/{name}/incidents and acknowledge or resolve"
 
-      # ── Rule 4: Schema drift detected ──
+      # ── Rule 4: Schema drift detected (latest run only) ──
       - uid: alert-schema-drift
         title: Schema drift detected
         condition: C
@@ -172,6 +176,11 @@ groups:
                 JOIN pipelines p ON p.id = pr.pipeline_id
                 WHERE cr.check_type IN ('schema_compatibility', 'target_schema_compatibility')
                   AND cr.status = 'failed'
+                  AND pr.id IN (
+                      SELECT MAX(id)
+                      FROM pipeline_runs
+                      GROUP BY pipeline_id
+                  )
                 ORDER BY pr.started_at DESC;
               format: table
               datasource:
