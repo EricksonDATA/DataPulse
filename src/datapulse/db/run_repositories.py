@@ -70,6 +70,19 @@ class RunRepository:
             .first()
         )
 
+    def get_runs_for_pipeline(
+        self,
+        pipeline_id: int,
+        status: str | None = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> list[PipelineRun]:
+        """List runs for a pipeline with optional status filter and pagination."""
+        q = self.session.query(PipelineRun).filter_by(pipeline_id=pipeline_id)
+        if status:
+            q = q.filter_by(status=RunStatus(status))
+        return q.order_by(PipelineRun.started_at.desc()).offset(offset).limit(limit).all()
+
 
 class CheckResultRepository:
     """CRUD operations for check results."""
@@ -143,5 +156,17 @@ class IncidentRepository:
         return (
             self.session.query(Incident)
             .filter_by(pipeline_run_id=pipeline_run_id)
+            .all()
+        )
+
+    def get_open_for_pipeline(self, pipeline_id: int, limit: int = 20) -> list[Incident]:
+        """Get open incidents for a pipeline, newest first."""
+        return (
+            self.session.query(Incident)
+            .join(Incident.pipeline_run)
+            .filter(PipelineRun.pipeline_id == pipeline_id)
+            .filter(Incident.status == IncidentStatus.OPEN)
+            .order_by(Incident.first_observed_at.desc())
+            .limit(limit)
             .all()
         )

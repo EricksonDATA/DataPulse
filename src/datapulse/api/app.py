@@ -15,6 +15,10 @@ from datapulse.api.schemas import (
     PipelineResponse,
     DatasetResponse,
     RunHealthResponse,
+    RunListItem,
+    IncidentListItem,
+    ContractSummary,
+    ReadyResponse,
 )
 from datapulse.db.repositories import PipelineRepository, DatasetRepository, ContractRepository
 from datapulse.db.run_repositories import RunRepository, IncidentRepository, CheckResultRepository
@@ -149,3 +153,139 @@ def get_pipeline_health(name: str, db: Session = Depends(get_db)):
 
     service = RunService(db)
     return RunHealthResponse(**service._build_health_summary(run))
+
+
+# ── GET /pipelines/{name}/runs ─────────────────────────────────
+
+@app.get("/pipelines/{name}/runs", response_model=list[RunListItem])
+def list_pipeline_runs(
+    name: str,
+    status: str | None = None,
+    limit: int = 20,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+):
+    """List recent runs for a pipeline with optional status filter."""
+    pipeline_repo = PipelineRepository(db)
+    pipeline = pipeline_repo.get_by_name(name)
+    if pipeline is None:
+        raise HTTPException(status_code=404, detail=f"Pipeline '{name}' not found.")
+
+    run_repo = RunRepository(db)
+    runs = run_repo.get_runs_for_pipeline(
+        pipeline_id=pipeline.id,
+        status=status,
+        limit=min(limit, 100),
+        offset=offset,
+    )
+
+    result = []
+    for run in runs:
+        duration_ms = None
+        if run.started_at and run.ended_at:
+            duration_ms = int((run.ended_at - run.started_at).total_seconds() * 1000)
+        result.append(RunListItem(
+            run_id=run.run_id,
+            status=run.status.value,
+            started_at=run.started_at.isoformat() if run.started_at else None,
+            ended_at=run.ended_at.isoformat() if run.ended_at else None,
+            duration_ms=duration_ms,
+            source_row_count=run.source_row_count,
+            target_row_count=run.target_row_count,
+            failure_reason=run.failure_reason,
+            contract_version=run.contract_version,
+        ))
+    return result
+
+
+# ── GET /pipelines/{name}/incidents ────────────────────────────
+
+@app.get("/pipelines/{name}/incidents", response_model=list[IncidentListItem])
+def list_pipeline_incidents(
+    name: str,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+):
+    """List open incidents for a pipeline."""
+    pipeline_repo = PipelineRepository(db)
+    pipeline = pipeline_repo.get_by_name(name)
+    if pipeline is None:
+        raise HTTPException(status_code=404, detail=f"Pipeline '{name}' not found.")
+
+    incident_repo = IncidentRepository(db)
+    incidents = incident_repo.get_open_for_pipeline(
+        pipeline_id=pipeline.id,
+        limit=min(limit, 100),
+    )
+
+    return [
+        IncidentListItem(
+            id=inc.id,
+            run_id=inc.pipeline_run.run_id,
+            incident_type=inc.incident_type,
+            severity=inc.severity.value,
+            status=inc.status.value,
+            owner=inc.owner,
+            retryable=inc.retryable,
+            failure_summary=inc.failure_summary,
+            first_observed_at=inc.first_observed_at.isoformat() if inc.first_observed_at else None,
+        )
+        for inc in incidents
+    ]
+
+
+# ── GET /datasets/{name}/contract ──────────────────────────────
+
+@app.get("/datasets/{name}/contract", response_model=ContractSummary)
+def get_dataset_contract(
+    name: str,
+    pipeline_name: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """Retrieve the active contract summary for a dataset."""
+    dataset_repo = DatasetRepository(db)
+    contract_repo = ContractRepository(db)
+
+    dataset = None
+    if pipeline_name:
+        pipeline = PipelineRepository(db).get_by_name(pipeline_name)
+        if pipeline:
+            dataset = dataset_repo.get_by_name(pipeline.id, name)
+    else:
+        from datapulse.models.dataset import Dataset as DatasetModel
+        dataset = db.query(DatasetModel).filter_by(name=name).first()
+
+    if dataset is None:
+        raise HTTPException(status_code=404, detail=f"Dataset '{name}' not found.")
+
+    contract = contract_repo.get_latest(dataset.id)
+    if contract is None:
+        raise HTTPException(status_code=404, detail=f"No contract found for dataset '{name}'.")
+
+    freshness = contract.freshness or {}
+    return ContractSummary(
+        dataset_name=dataset.name,
+        role=dataset.role,
+        contract_version=contract.version,
+        schema_columns=list((contract.schema_definition or {}).keys()),
+        freshness_max_age_hours=freshness.get("max_age_hours"),
+        quality_rules=contract.quality_rules,
+    )
+
+
+# ── GET /ready ─────────────────────────────────────────────────
+
+@app.get("/ready", response_model=ReadyResponse)
+def readiness(db: Session = Depends(get_db)):
+    """Confirm the API and database are ready."""
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
+        db_status = "ok"
+    except Exception:
+        db_status = "unavailable"
+    return ReadyResponse(
+        status="ok" if db_status == "ok" else "degraded",
+        database=db_status,
+        version="0.2.0",
+    )

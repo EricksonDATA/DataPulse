@@ -50,6 +50,14 @@ class DatasetRepository:
             self.session.flush()
         return dataset
 
+    def get_by_name(self, pipeline_id: int, name: str) -> Dataset | None:
+        """Find a dataset by pipeline and name."""
+        return (
+            self.session.query(Dataset)
+            .filter_by(pipeline_id=pipeline_id, name=name)
+            .first()
+        )
+
 
 class ContractRepository:
     """CRUD operations for contracts."""

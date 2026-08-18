@@ -89,3 +89,46 @@ class RunHealthResponse(BaseModel):
     contract_version: int | None = None
     checks: list[CheckResultResponse] = []
     incidents: list[IncidentResponse] = []
+
+
+class RunListItem(BaseModel):
+    """Summary of a run for list endpoints (no check details)."""
+    run_id: str
+    status: str
+    started_at: str | None = None
+    ended_at: str | None = None
+    duration_ms: int | None = None
+    source_row_count: int | None = None
+    target_row_count: int | None = None
+    failure_reason: str | None = None
+    contract_version: int | None = None
+
+
+class IncidentListItem(BaseModel):
+    """Incident summary for list endpoints."""
+    id: int
+    run_id: str
+    incident_type: str
+    severity: str
+    status: str
+    owner: str
+    retryable: bool
+    failure_summary: str | None = None
+    first_observed_at: str | None = None
+
+
+class ContractSummary(BaseModel):
+    """Contract summary for the dataset endpoint."""
+    dataset_name: str
+    role: str
+    contract_version: int
+    schema_columns: list[str]
+    freshness_max_age_hours: float | None = None
+    quality_rules: dict | None = None
+
+
+class ReadyResponse(BaseModel):
+    """Response for GET /ready."""
+    status: str
+    database: str
+    version: str

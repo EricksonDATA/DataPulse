@@ -419,3 +419,110 @@ class TestSourceToTargetReconciliation:
         assert row_check["status"] == "failed"
         assert "target" in row_check["message"].lower()
         assert "not found" in row_check["message"].lower()
+
+
+class TestListRuns:
+    """GET /pipelines/{name}/runs — list runs with filters."""
+
+    def test_list_runs_empty(self, client, registered_pipeline):
+        r = client.get("/pipelines/ecommerce_inventory/runs")
+        assert r.status_code == 200
+        assert r.json() == []
+
+    def test_list_runs_after_submissions(self, client, registered_dataset):
+        for i in range(3):
+            client.post("/runs", json={
+                "pipeline_name": "ecommerce_inventory",
+                "run_id": f"run-list-{i}",
+                "source_path": f"{FIXTURES}/inventory_valid.csv",
+            })
+        r = client.get("/pipelines/ecommerce_inventory/runs")
+        assert r.status_code == 200
+        runs = r.json()
+        assert len(runs) == 3
+        # Newest first
+        assert runs[0]["run_id"] == "run-list-2"
+        # Has required fields
+        for run in runs:
+            assert "run_id" in run
+            assert "status" in run
+            assert "started_at" in run
+
+    def test_list_runs_status_filter(self, client, registered_dataset):
+        client.post("/runs", json={
+            "pipeline_name": "ecommerce_inventory",
+            "run_id": "run-pass",
+            "source_path": f"{FIXTURES}/inventory_valid.csv",
+        })
+        client.post("/runs", json={
+            "pipeline_name": "ecommerce_inventory",
+            "run_id": "run-fail",
+            "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+        })
+        r = client.get("/pipelines/ecommerce_inventory/runs?status=failed")
+        assert r.status_code == 200
+        runs = r.json()
+        assert all(run["status"] == "failed" for run in runs)
+
+    def test_list_runs_nonexistent_pipeline(self, client):
+        r = client.get("/pipelines/nope/runs")
+        assert r.status_code == 404
+
+
+class TestListIncidents:
+    """GET /pipelines/{name}/incidents — list open incidents."""
+
+    def test_list_incidents_empty(self, client, registered_pipeline):
+        r = client.get("/pipelines/ecommerce_inventory/incidents")
+        assert r.status_code == 200
+        assert r.json() == []
+
+    def test_list_incidents_after_failure(self, client, registered_dataset):
+        client.post("/runs", json={
+            "pipeline_name": "ecommerce_inventory",
+            "run_id": "run-inc-list",
+            "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+        })
+        r = client.get("/pipelines/ecommerce_inventory/incidents")
+        assert r.status_code == 200
+        incidents = r.json()
+        assert len(incidents) >= 1
+        inc = incidents[0]
+        assert "id" in inc
+        assert "run_id" in inc
+        assert "incident_type" in inc
+        assert inc["status"] == "open"
+
+    def test_list_incidents_nonexistent_pipeline(self, client):
+        r = client.get("/pipelines/nope/incidents")
+        assert r.status_code == 404
+
+
+class TestDatasetContract:
+    """GET /datasets/{name}/contract — retrieve contract summary."""
+
+    def test_get_contract(self, client, registered_dataset):
+        r = client.get("/datasets/inventory_snapshot/contract?pipeline_name=ecommerce_inventory")
+        assert r.status_code == 200
+        d = r.json()
+        assert d["dataset_name"] == "inventory_snapshot"
+        assert d["role"] == "source"
+        assert d["contract_version"] == 1
+        assert "snapshot_date" in d["schema_columns"]
+        assert d["freshness_max_age_hours"] == 24
+
+    def test_get_contract_nonexistent_dataset(self, client):
+        r = client.get("/datasets/nope/contract")
+        assert r.status_code == 404
+
+
+class TestReadiness:
+    """GET /ready — readiness check."""
+
+    def test_ready(self, client):
+        r = client.get("/ready")
+        assert r.status_code == 200
+        d = r.json()
+        assert d["status"] == "ok"
+        assert d["database"] == "ok"
+        assert "version" in d
