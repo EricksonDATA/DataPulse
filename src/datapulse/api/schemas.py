@@ -31,8 +31,8 @@ class RunSubmit(BaseModel):
     pipeline_name: str
     run_id: str
     source_path: str
+    dataset_name: str
     target_path: str | None = None
-    dataset_name: str = "inventory_snapshot"
     target_dataset_name: str | None = None
     contract_version: int | None = None
 
