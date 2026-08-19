@@ -384,3 +384,14 @@ def get_webhook_log(limit: int = 20, db: Session = Depends(get_db), api_key: str
         }
         for n in notifications
     ]
+
+
+# ── GET /metrics ───────────────────────────────────────────────
+
+
+@app.get("/metrics")
+def get_metrics(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    """Operational metrics for DataPulse self-monitoring."""
+    from datapulse.metrics import get_operational_metrics
+
+    return get_operational_metrics(db)
