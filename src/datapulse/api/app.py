@@ -1,9 +1,8 @@
 """API routes — DataPulse endpoints."""
 
 import logging
-from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from datapulse.api.auth import get_api_key
@@ -104,6 +103,8 @@ def register_dataset(data: DatasetCreate, db: Session = Depends(get_db), api_key
 @app.post("/runs", response_model=RunHealthResponse, status_code=201)
 def submit_run(data: RunSubmit, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Submit a pipeline run. Idempotent — same run_id returns existing result."""
+    from pathlib import Path
+
     source_path = Path(data.source_path)
     target_path = Path(data.target_path) if data.target_path else None
     service = RunService(db)
@@ -340,16 +341,23 @@ def acknowledge_run(run_id: str, db: Session = Depends(get_db), api_key: str = D
 
 
 @app.post("/webhook/receiver")
-def webhook_receiver(payload: dict, db: Session = Depends(get_db)):
+def webhook_receiver(payload: dict, request: Request, db: Session = Depends(get_db)):
     """Receive and log webhook notifications from Grafana alerts.
 
-    This endpoint is intentionally public — Grafana calls it automatically
-    and cannot easily send custom headers. Security is provided by:
-    1. The endpoint only accepts POST with JSON body
-    2. Grafana is configured to send to http://api:8000 (internal Docker network)
-    3. The endpoint does not expose sensitive data
+    Security: If DATAPULSE_WEBHOOK_SECRET is set, the request must include
+    an X-Webhook-Secret header matching the configured value.
+    If not set, the endpoint is open (development mode).
     """
+    import os
+
     from datapulse.models.notification import Notification
+
+    # Validate webhook secret if configured
+    webhook_secret = os.environ.get("DATAPULSE_WEBHOOK_SECRET", "")
+    if webhook_secret:
+        provided_secret = request.headers.get("X-Webhook-Secret", "")
+        if provided_secret != webhook_secret:
+            raise HTTPException(status_code=403, detail="Invalid webhook secret")
 
     # Extract alert name from payload if present
     alert_name = None

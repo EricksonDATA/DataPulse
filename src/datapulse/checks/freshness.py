@@ -1,30 +1,44 @@
 """Check: freshness validation — is the source data recent enough?"""
 
-import csv
 from datetime import datetime, timezone
 from pathlib import Path
 
 from datapulse.models.check_result import CheckStatus
+from datapulse.references import DatasetReference, ResolvedData
 
 
-def check_freshness(source_path: Path, freshness_rules: dict) -> dict:
+def _to_resolved(source: Path | ResolvedData | str) -> ResolvedData:
+    """Convert any source to ResolvedData."""
+    if isinstance(source, ResolvedData):
+        return source
+    if isinstance(source, Path):
+        ref = DatasetReference.from_legacy_path(str(source))
+        return ref.resolve()
+    if isinstance(source, str):
+        ref = DatasetReference.from_uri(source)
+        return ref.resolve()
+    return ResolvedData.from_error(str(source), f"Unsupported source type: {type(source)}")
+
+
+def check_freshness(source: Path | ResolvedData | str, freshness_rules: dict) -> dict:
     """
     Verify that the latest timestamp in the source is within the freshness window.
 
-    Args:
-        source_path: Path to the CSV file.
-        freshness_rules: Dict with 'max_age_hours' and 'timestamp_column'.
-
-    Returns:
-        dict with status, expected, observed, message.
+    Accepts Path, ResolvedData, or URI string.
     """
     max_age_hours = freshness_rules.get("max_age_hours", 24)
     timestamp_column = freshness_rules.get("timestamp_column", "snapshot_date")
 
-    with source_path.open(newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        rows = list(reader)
+    resolved = _to_resolved(source)
+    if not resolved.is_parseable:
+        return {
+            "status": CheckStatus.FAILED,
+            "expected": {"max_age_hours": max_age_hours, "timestamp_column": timestamp_column},
+            "observed": {"latest_timestamp": None, "error": resolved.error},
+            "message": f"Cannot read source for freshness: {resolved.error}",
+        }
 
+    rows = resolved.rows
     if not rows:
         return {
             "status": CheckStatus.FAILED,

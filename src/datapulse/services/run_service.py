@@ -50,8 +50,8 @@ class RunService:
         pipeline_name: str,
         run_id: str,
         source_path: Path,
+        dataset_name: str,
         target_path: Path | None = None,
-        dataset_name: str = "inventory_snapshot",
         target_dataset_name: str | None = None,
         contract_version: int | None = None,
     ) -> dict:
@@ -149,9 +149,9 @@ class RunService:
             result = self._execute_check(
                 check_type=check_type,
                 run_id=run.id,
-                source_path=source_path,
+                source_resolved=source_resolved,
                 contract=contract,
-                target_path=target_path,
+                target_resolved=target_resolved,
                 target_contract=target_contract,
             )
 
@@ -255,9 +255,9 @@ class RunService:
         self,
         check_type: CheckType,
         run_id: int,
-        source_path: Path,
+        source_resolved,
         contract,
-        target_path: Path | None = None,
+        target_resolved=None,
         target_contract=None,
     ) -> dict:
         """Execute a single check and return the result dict."""
@@ -267,17 +267,17 @@ class RunService:
         from datapulse.checks.source_readability import check_source_readability
 
         if check_type == CheckType.SOURCE_READABILITY:
-            return check_source_readability(source_path)
+            return check_source_readability(source_resolved)
         elif check_type == CheckType.SCHEMA_COMPATIBILITY:
-            return check_schema_compatibility(source_path, contract.schema_definition)
+            return check_schema_compatibility(source_resolved, contract.schema_definition)
         elif check_type == CheckType.TARGET_SCHEMA_COMPATIBILITY:
-            if target_path and target_contract:
-                return check_schema_compatibility(target_path, target_contract.schema_definition)
+            if target_resolved and target_contract:
+                return check_schema_compatibility(target_resolved, target_contract.schema_definition)
             return {"status": CheckStatus.SKIPPED, "message": "No target to validate"}
         elif check_type == CheckType.ROW_COUNT:
-            return check_row_count(source_path, contract.quality_rules, target_path)
+            return check_row_count(source_resolved, contract.quality_rules, target_resolved)
         elif check_type == CheckType.FRESHNESS:
-            return check_freshness(source_path, contract.freshness)
+            return check_freshness(source_resolved, contract.freshness)
         else:
             raise ValueError(f"Unknown check type: {check_type}")
 
