@@ -1,0 +1,102 @@
+order_id,customer_sk,order_date,product_sk,product_name,category,quantity,unit_price,total_amount,payment_method,order_status,is_completed
+ORD-001,1001,2026-08-19,201,Wireless Headphones,Electronics,2,49.99,99.98,Credit Card,completed,true
+ORD-002,1002,2026-08-19,202,Running Shoes,Sports,1,129.99,129.99,PayPal,completed,true
+ORD-003,1003,2026-08-19,203,Python Book,Books,1,39.99,39.99,Credit Card,completed,true
+ORD-004,1004,2026-08-19,204,Water Bottle,Home,3,24.99,74.97,Debit Card,shipped,false
+ORD-005,1005,2026-08-19,205,Yoga Mat,Sports,1,59.99,59.99,Credit Card,completed,true
+ORD-006,1006,2026-08-19,206,Bluetooth Speaker,Electronics,1,79.99,79.99,PayPal,completed,true
+ORD-007,1007,2026-08-19,207,Coffee Beans,Food,2,18.99,37.98,Credit Card,shipped,false
+ORD-008,1008,2026-08-19,208,Laptop Stand,Electronics,1,45.99,45.99,Debit Card,completed,true
+ORD-009,1009,2026-08-19,209,Resistance Bands,Sports,1,29.99,29.99,Credit Card,completed,true
+ORD-010,1010,2026-08-19,210,LED Desk Lamp,Home,1,34.99,34.99,PayPal,completed,true
+ORD-011,1011,2026-08-19,211,Mechanical Keyboard,Electronics,1,89.99,89.99,Credit Card,completed,true
+ORD-012,1012,2026-08-19,212,Protein Powder,Food,2,34.99,69.98,PayPal,shipped,false
+ORD-013,1013,2026-08-19,213,Backpack,Accessories,1,59.99,59.99,Credit Card,completed,true
+ORD-014,1014,2026-08-19,214,Sunglasses,Accessories,1,29.99,29.99,Debit Card,completed,true
+ORD-015,1015,2026-08-19,215,Notebook,Stationery,3,9.99,29.97,Credit Card,completed,true
+ORD-016,1016,2026-08-19,216,USB Cable,Electronics,2,12.99,25.98,PayPal,completed,true
+ORD-017,1017,2026-08-19,217,Face Mask,Health,5,4.99,24.95,Credit Card,completed,true
+ORD-018,1018,2026-08-19,218,Hand Sanitizer,Health,3,7.99,23.97,Debit Card,completed,true
+ORD-019,1019,2026-08-19,219,Bluetooth Earbuds,Electronics,1,49.99,49.99,Credit Card,completed,true
+ORD-020,1020,2026-08-19,220,Desk Organizer,Home,1,24.99,24.99,PayPal,completed,true
+ORD-021,1021,2026-08-19,221,Running Socks,Sports,3,14.99,44.97,Credit Card,completed,true
+ORD-022,1022,2026-08-19,222,Phone Case,Accessories,1,19.99,19.99,Debit Card,completed,true
+ORD-023,1023,2026-08-19,223,Webcam,Electronics,1,69.99,69.99,Credit Card,completed,true
+ORD-024,1024,2026-08-19,224,Mouse Pad,Accessories,1,14.99,14.99,PayPal,completed,true
+ORD-025,1025,2026-08-19,225,Desk Lamp,Home,1,39.99,39.99,Credit Card,completed,true
+ORD-026,1026,2026-08-19,226,Water Filter,Home,1,29.99,29.99,Debit Card,completed,true
+ORD-027,1027,2026-08-19,227,Jump Rope,Sports,1,19.99,19.99,Credit Card,completed,true
+ORD-028,1028,2026-08-19,228,Calculator,Electronics,1,15.99,15.99,PayPal,completed,true
+ORD-029,1029,2026-08-19,229,Sticky Notes,Stationery,5,3.99,19.95,Credit Card,completed,true
+ORD-030,1030,2026-08-19,230,Pencil Case,Stationery,2,8.99,17.98,Debit Card,completed,true
+ORD-031,1031,2026-08-19,231,Hand Towel,Home,4,6.99,27.96,Credit Card,completed,true
+ORD-032,1032,2026-08-19,232,Dumbbell Set,Sports,1,49.99,49.99,PayPal,completed,true
+ORD-033,1033,2026-08-19,233,Extension Cord,Electronics,1,24.99,24.99,Credit Card,completed,true
+ORD-034,1034,2026-08-19,234,Pill Organizer,Health,1,12.99,12.99,Debit Card,completed,true
+ORD-035,1035,2026-08-19,235,Keychain,Accessories,2,7.99,15.98,Credit Card,completed,true
+ORD-036,1036,2026-08-19,236,Playing Cards,Entertainment,1,9.99,9.99,PayPal,completed,true
+ORD-037,1037,2026-08-19,237,Bookmark,Stationery,3,2.99,8.97,Credit Card,completed,true
+ORD-038,1038,2026-08-19,238,Candle,Home,2,14.99,29.98,Debit Card,completed,true
+ORD-039,1039,2026-08-19,239,Tape Roll,Stationery,4,3.99,15.96,Credit Card,completed,true
+ORD-040,1040,2026-08-19,240,Coaster Set,Home,1,12.99,12.99,PayPal,completed,true
+ORD-041,1041,2026-08-19,241,Puzzle,Entertainment,1,19.99,19.99,Credit Card,completed,true
+ORD-042,1042,2026-08-19,242,Rubber Bands,Stationery,5,2.49,12.45,Debit Card,completed,true
+ORD-043,1043,2026-08-19,243,Eraser,Stationery,3,1.99,5.97,Credit Card,completed,true
+ORD-044,1044,2026-08-19,244,Ruler,Stationery,2,3.49,6.98,PayPal,completed,true
+ORD-045,1045,2026-08-19,245,Sharpener,Stationery,2,2.99,5.98,Credit Card,completed,true
+ORD-046,1046,2026-08-19,246,Glue Stick,Stationery,3,2.49,7.47,Debit Card,completed,true
+ORD-047,1047,2026-08-19,247,Scissors,Stationery,1,8.99,8.99,Credit Card,completed,true
+ORD-048,1048,2026-08-19,248,Paper Clips,Stationery,5,1.99,9.95,PayPal,completed,true
+ORD-049,1049,2026-08-19,249,Stapler,Stationery,1,12.99,12.99,Credit Card,completed,true
+ORD-050,1050,2026-08-19,250,Tape Dispenser,Stationery,1,14.99,14.99,Debit Card,completed,true
+ORD-051,1051,2026-08-19,251,Whiteboard Marker,Stationery,4,4.99,19.96,Credit Card,completed,true
+ORD-052,1052,2026-08-19,252,Desk Mat,Accessories,1,19.99,19.99,PayPal,completed,true
+ORD-053,1053,2026-08-19,253,Cable Organizer,Accessories,1,15.99,15.99,Credit Card,completed,true
+ORD-054,1054,2026-08-19,254,Monitor Stand,Electronics,1,39.99,39.99,Debit Card,completed,true
+ORD-055,1055,2026-08-19,255,Wrist Rest,Accessories,1,12.99,12.99,Credit Card,completed,true
+ORD-056,1056,2026-08-19,256,Laptop Sleeve,Accessories,1,24.99,24.99,PayPal,completed,true
+ORD-057,1057,2026-08-19,257,Screen Protector,Accessories,2,9.99,19.98,Credit Card,completed,true
+ORD-058,1058,2026-08-19,258,Phone Stand,Accessories,1,14.99,14.99,Debit Card,completed,true
+ORD-059,1059,2026-08-19,259,Charging Cable,Electronics,3,8.99,26.97,Credit Card,completed,true
+ORD-060,1060,2026-08-19,260,Power Bank,Electronics,1,34.99,34.99,PayPal,completed,true
+ORD-061,1061,2026-08-19,261,Travel Mug,Home,1,18.99,18.99,Credit Card,completed,true
+ORD-062,1062,2026-08-19,262,Lunch Box,Home,1,22.99,22.99,Debit Card,completed,true
+ORD-063,1063,2026-08-19,263,Umbrella,Accessories,1,19.99,19.99,Credit Card,completed,true
+ORD-064,1064,2026-08-19,264,Gloves,Sports,1,14.99,14.99,PayPal,completed,true
+ORD-065,1065,2026-08-19,265,Beanie,Sports,1,12.99,12.99,Credit Card,completed,true
+ORD-066,1066,2026-08-19,266,Scarf,Accessories,1,24.99,24.99,Debit Card,completed,true
+ORD-067,1067,2026-08-19,267,Belt,Accessories,1,29.99,29.99,Credit Card,completed,true
+ORD-068,1068,2026-08-19,268,Tie,Accessories,1,19.99,19.99,PayPal,completed,true
+ORD-069,1069,2026-08-19,269,Cufflinks,Accessories,1,34.99,34.99,Credit Card,completed,true
+ORD-070,1070,2026-08-19,270,Pocket Square,Accessories,1,14.99,14.99,Debit Card,completed,true
+ORD-071,1071,2026-08-19,271,Socks,Sports,3,6.99,20.97,Credit Card,completed,true
+ORD-072,1072,2026-08-19,272,Undershirt,Accessories,2,12.99,25.98,PayPal,completed,true
+ORD-073,1073,2026-08-19,273,Pajamas,Accessories,1,29.99,29.99,Credit Card,completed,true
+ORD-074,1074,2026-08-19,274,Slippers,Home,1,19.99,19.99,Debit Card,completed,true
+ORD-075,1075,2026-08-19,275,Bath Towel,Home,2,14.99,29.98,Credit Card,completed,true
+ORD-076,1076,2026-08-19,276,Hand Soap,Health,3,4.99,14.97,PayPal,completed,true
+ORD-077,1077,2026-08-19,277,Toothbrush,Health,2,3.99,7.98,Credit Card,completed,true
+ORD-078,1078,2026-08-19,278,Shampoo,Health,1,8.99,8.99,Debit Card,completed,true
+ORD-079,1079,2026-08-19,279,Conditioner,Health,1,8.99,8.99,Credit Card,completed,true
+ORD-080,1080,2026-08-19,280,Body Wash,Health,1,6.99,6.99,PayPal,completed,true
+ORD-081,1081,2026-08-19,281,Lotion,Health,1,9.99,9.99,Credit Card,completed,true
+ORD-082,1082,2026-08-19,282,Sunscreen,Health,1,12.99,12.99,Debit Card,completed,true
+ORD-083,1083,2026-08-19,283,Lip Balm,Health,2,3.49,6.98,Credit Card,completed,true
+ORD-084,1084,2026-08-19,284,Cotton Balls,Health,1,4.99,4.99,PayPal,completed,true
+ORD-085,1085,2026-08-19,285,Band-Aids,Health,1,5.99,5.99,Credit Card,completed,true
+ORD-086,1086,2026-08-19,286,Thermometer,Health,1,14.99,14.99,Debit Card,completed,true
+ORD-087,1087,2026-08-19,287,First Aid Kit,Health,1,24.99,24.99,Credit Card,completed,true
+ORD-088,1088,2026-08-19,288,Vitamins,Health,1,19.99,19.99,PayPal,completed,true
+ORD-089,1089,2026-08-19,289,Protein Bar,Food,4,3.99,15.96,Credit Card,completed,true
+ORD-090,1090,2026-08-19,290,Trail Mix,Food,2,7.99,15.98,Debit Card,completed,true
+ORD-091,1091,2026-08-19,291,Granola Bar,Food,5,2.49,12.45,Credit Card,completed,true
+ORD-092,1092,2026-08-19,292,Dried Fruit,Food,2,6.99,13.98,PayPal,completed,true
+ORD-093,1093,2026-08-19,293,Nuts,Food,3,8.99,26.97,Credit Card,completed,true
+ORD-094,1094,2026-08-19,294,Chips,Food,4,3.99,15.96,Debit Card,completed,true
+ORD-095,1095,2026-08-19,295,Crackers,Food,2,4.99,9.98,Credit Card,completed,true
+ORD-096,1096,2026-08-19,296,Cookies,Food,3,5.99,17.97,PayPal,completed,true
+ORD-097,1097,2026-08-19,297,Candy,Food,5,1.99,9.95,Credit Card,completed,true
+ORD-098,1098,2026-08-19,298,Gum,Food,3,1.49,4.47,Debit Card,completed,true
+ORD-099,1099,2026-08-19,299,Mints,Food,2,2.49,4.98,Credit Card,completed,true
+ORD-100,1100,2026-08-19,300,Chocolate Bar,Food,4,2.99,11.96,PayPal,completed,true
+ORD-101,1101,2026-08-19,301,Ice Cream,Food,1,6.99,6.99,Credit Card,completed,true
