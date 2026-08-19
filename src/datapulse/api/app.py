@@ -102,19 +102,19 @@ def register_dataset(data: DatasetCreate, db: Session = Depends(get_db), api_key
 
 @app.post("/runs", response_model=RunHealthResponse, status_code=201)
 def submit_run(data: RunSubmit, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    """Submit a pipeline run. Idempotent — same run_id returns existing result."""
-    from pathlib import Path
+    """Submit a pipeline run. Idempotent — same run_id returns existing result.
 
-    source_path = Path(data.source_path)
-    target_path = Path(data.target_path) if data.target_path else None
+    source_path and target_path are passed as raw strings to preserve URI schemes
+    (s3://, table://, query://, etc.). DatasetReference handles parsing.
+    """
     service = RunService(db)
 
     try:
         result = service.submit_run(
             pipeline_name=data.pipeline_name,
             run_id=data.run_id,
-            source_path=source_path,
-            target_path=target_path,
+            source_path=data.source_path,
+            target_path=data.target_path,
             dataset_name=data.dataset_name,
             target_dataset_name=data.target_dataset_name,
             contract_version=data.contract_version,

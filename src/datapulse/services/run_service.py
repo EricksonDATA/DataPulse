@@ -2,7 +2,6 @@
 
 import logging
 import time
-from pathlib import Path
 
 from sqlalchemy.orm import Session
 
@@ -49,9 +48,9 @@ class RunService:
         self,
         pipeline_name: str,
         run_id: str,
-        source_path: Path,
+        source_path: str,
         dataset_name: str,
-        target_path: Path | None = None,
+        target_path: str | None = None,
         target_dataset_name: str | None = None,
         contract_version: int | None = None,
     ) -> dict:
@@ -61,14 +60,16 @@ class RunService:
         This is the main entry point — handles the full lifecycle.
         Idempotent: submitting the same run_id twice returns the same result.
 
-        Accepts both raw Path objects and DatasetReference URIs.
-        If a DatasetReference URI is provided (e.g., "s3://..."), it is
-        resolved before running checks.
+        source_path and target_path are raw strings that may be:
+        - Local file paths: "/data/file.csv"
+        - URIs: "s3://bucket/key.csv", "table://schema.table"
+
+        DatasetReference.from_uri() parses them correctly.
         """
         from datapulse.references import DatasetReference
 
         # Resolve source reference
-        source_ref = DatasetReference.from_legacy_path(str(source_path))
+        source_ref = DatasetReference.from_uri(source_path)
         source_resolved = source_ref.resolve()
         if not source_resolved.is_parseable:
             raise ValueError(f"Cannot resolve source: {source_resolved.error}")
@@ -77,7 +78,7 @@ class RunService:
         target_ref = None
         target_resolved = None
         if target_path:
-            target_ref = DatasetReference.from_legacy_path(str(target_path))
+            target_ref = DatasetReference.from_uri(target_path)
             target_resolved = target_ref.resolve()
             if not target_resolved.is_parseable:
                 raise ValueError(f"Cannot resolve target: {target_resolved.error}")

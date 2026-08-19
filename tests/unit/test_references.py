@@ -201,3 +201,37 @@ class TestFixtureIntegration:
         assert rd.is_parseable is True
         assert rd.row_count == 101
         assert "order_date" in rd.columns
+
+
+class TestURIPreservation:
+    """Test that URI schemes survive from API to resolver."""
+
+    def test_s3_uri_preserved_in_from_uri(self):
+        """S3 URI should not be converted to a local path."""
+        ref = DatasetReference.from_uri("s3://my-bucket/data/orders.csv")
+        assert ref.ref_type == ReferenceType.S3
+        assert ref.raw_path == "my-bucket/data/orders.csv"
+        assert ref.uri == "s3://my-bucket/data/orders.csv"
+        # The scheme should NOT be destroyed
+        assert "\\" not in ref.raw_path  # No Windows path mangling
+
+    def test_local_path_still_works(self):
+        """Bare local paths should still resolve as local."""
+        ref = DatasetReference.from_uri("/data/file.csv")
+        assert ref.ref_type == ReferenceType.LOCAL
+        assert ref.raw_path == "/data/file.csv"
+
+    def test_s3_uri_resolves_in_mock_mode(self, monkeypatch):
+        """S3 URI should resolve to mock data when DATAPULSE_S3_MOCK=true."""
+        monkeypatch.setenv("DATAPULSE_S3_MOCK", "true")
+        ref = DatasetReference.from_uri("s3://bucket/key.csv")
+        rd = ref.resolve()
+        assert rd.is_parseable is True
+        assert rd.source_uri == "s3://bucket/key.csv"
+
+    def test_s3_uri_fails_without_mock(self):
+        """S3 URI should fail clearly when mock mode is off."""
+        ref = DatasetReference.from_uri("s3://bucket/key.csv")
+        rd = ref.resolve()
+        assert rd.is_parseable is False
+        assert "S3 client required" in rd.error
