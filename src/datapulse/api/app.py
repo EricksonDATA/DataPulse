@@ -334,18 +334,49 @@ def acknowledge_run(run_id: str, db: Session = Depends(get_db)):
 
 # ── POST /webhook/receiver ─────────────────────────────────────
 
-_webhook_log: list[dict] = []
-
 
 @app.post("/webhook/receiver")
-def webhook_receiver(payload: dict):
+def webhook_receiver(payload: dict, db: Session = Depends(get_db)):
     """Receive and log webhook notifications from Grafana alerts."""
-    _webhook_log.append(payload)
-    logger.info("webhook_received", extra={"payload_keys": list(payload.keys())})
+    from datapulse.models.notification import Notification
+
+    # Extract alert name from payload if present
+    alert_name = None
+    alerts = payload.get("alerts", [])
+    if alerts:
+        alert_name = alerts[0].get("labels", {}).get("alertname")
+
+    notification = Notification(
+        alert_name=alert_name,
+        status=payload.get("status", "unknown"),
+        payload=payload,
+    )
+    db.add(notification)
+    db.commit()
+
+    logger.info("webhook_received", extra={"alert_name": alert_name})
     return {"status": "received"}
 
 
 @app.get("/webhook/log")
-def get_webhook_log(limit: int = 20):
-    """View recent webhook notifications."""
-    return _webhook_log[-limit:]
+def get_webhook_log(limit: int = 20, db: Session = Depends(get_db)):
+    """View recent webhook notifications from the database."""
+    from datapulse.models.notification import Notification
+
+    notifications = (
+        db.query(Notification)
+        .order_by(Notification.created_at.desc())
+        .limit(min(limit, 100))
+        .all()
+    )
+
+    return [
+        {
+            "id": n.id,
+            "alert_name": n.alert_name,
+            "status": n.status,
+            "payload": n.payload,
+            "created_at": n.created_at.isoformat(),
+        }
+        for n in notifications
+    ]
