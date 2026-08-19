@@ -85,6 +85,7 @@ class TestRunLifecycle:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-valid",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         d = r.json()
@@ -101,6 +102,7 @@ class TestRunLifecycle:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-drift",
                 "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         d = r.json()
@@ -122,6 +124,7 @@ class TestRunLifecycle:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-missing",
                 "source_path": "nonexistent.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         d = r.json()
@@ -141,6 +144,7 @@ class TestRunLifecycle:
                 "pipeline_name": "nonexistent",
                 "run_id": "run-x",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         assert r.status_code == 400
@@ -150,6 +154,7 @@ class TestRunLifecycle:
             "pipeline_name": "ecommerce_inventory",
             "run_id": "run-dup",
             "source_path": f"{FIXTURES}/inventory_valid.csv",
+            "dataset_name": "inventory_snapshot",
         }
         r1 = client.post("/runs", json=payload)
         r2 = client.post("/runs", json=payload)
@@ -168,6 +173,7 @@ class TestGetRunHealth:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-get",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         r = client.get("/pipelines/ecommerce_inventory/runs/run-get")
@@ -192,6 +198,7 @@ class TestPipelineHealth:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-h1",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         r = client.get("/pipelines/ecommerce_inventory/health")
@@ -211,6 +218,7 @@ class TestIncidentFields:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-inc",
                 "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         d = r.json()
@@ -228,6 +236,7 @@ class TestCheckResultFields:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-chk",
                 "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         d = r.json()
@@ -246,6 +255,7 @@ class TestTimestampsUTC:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-ts",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         d = r.json()
@@ -297,6 +307,7 @@ class TestContractVersionEnforcement:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-v1",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
                 "contract_version": 1,
             },
         )
@@ -312,6 +323,7 @@ class TestContractVersionEnforcement:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-v2",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
                 "contract_version": 2,
             },
         )
@@ -328,6 +340,7 @@ class TestContractVersionEnforcement:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-ver-99",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
                 "contract_version": 99,
             },
         )
@@ -344,6 +357,7 @@ class TestDuplicateKeyValidation:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-nodup",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         d = r.json()
@@ -368,6 +382,7 @@ class TestDuplicateKeyValidation:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-dup",
                 "source_path": str(dup_file),
+                "dataset_name": "inventory_snapshot",
             },
         )
         d = r.json()
@@ -409,6 +424,7 @@ class TestTargetSchemaSkipped:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-tgt-skip",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         d = r.json()
@@ -436,6 +452,7 @@ class TestSourceToTargetReconciliation:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-recon-ok",
                 "source_path": str(src),
+                "dataset_name": "inventory_snapshot",
                 "target_path": str(tgt),
             },
         )
@@ -459,6 +476,7 @@ class TestSourceToTargetReconciliation:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-recon-fail",
                 "source_path": str(src),
+                "dataset_name": "inventory_snapshot",
                 "target_path": str(tgt),
             },
         )
@@ -475,6 +493,7 @@ class TestSourceToTargetReconciliation:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-no-tgt",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
                 "target_path": "nonexistent_target.csv",
             },
         )
@@ -501,6 +520,7 @@ class TestListRuns:
                     "pipeline_name": "ecommerce_inventory",
                     "run_id": f"run-list-{i}",
                     "source_path": f"{FIXTURES}/inventory_valid.csv",
+                    "dataset_name": "inventory_snapshot",
                 },
             )
         r = client.get("/pipelines/ecommerce_inventory/runs")
@@ -522,6 +542,7 @@ class TestListRuns:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-pass",
                 "source_path": f"{FIXTURES}/inventory_valid.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         client.post(
@@ -530,6 +551,7 @@ class TestListRuns:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-fail",
                 "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         r = client.get("/pipelines/ecommerce_inventory/runs?status=failed")
@@ -557,6 +579,7 @@ class TestListIncidents:
                 "pipeline_name": "ecommerce_inventory",
                 "run_id": "run-inc-list",
                 "source_path": f"{FIXTURES}/inventory_schema_drift.csv",
+                "dataset_name": "inventory_snapshot",
             },
         )
         r = client.get("/pipelines/ecommerce_inventory/incidents")
