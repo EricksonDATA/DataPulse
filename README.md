@@ -2,7 +2,7 @@
 
 **A data contract and pipeline observability platform**
 
-DataPulse is a small platform for monitoring existing data pipelines and making their health visible. It answers the operational questions that are easy to miss when a pipeline appears to have completed successfully:
+DataPulse monitors existing data pipelines and makes their health visible. It answers the operational questions that are easy to miss when a pipeline appears to have completed successfully:
 
 - Did the pipeline run?
 - Was the source file or API response valid?
@@ -13,131 +13,253 @@ DataPulse is a small platform for monitoring existing data pipelines and making 
 - Who owns the failure?
 - Can the run be retried?
 
-DataPulse is designed as a platform product rather than another Bronze/Silver/Gold analytics project. It can monitor existing pipelines and connect them through shared metadata, data contracts, quality checks, lineage, incidents, and alerts.
-
 ## Architecture
 
 ```text
-Existing data pipelines
+Existing data pipelines (healthcare, ecommerce, ...)
           |
           v
-DataPulse Python SDK / CLI
+DataPulse Python SDK / CLI adapter
           |
           v
-FastAPI metadata API
+FastAPI metadata API (13 endpoints)
           |
           v
-PostgreSQL control database
+PostgreSQL control database (7 tables, Alembic migrations)
           |
           v
-Quality checks + lineage metadata
-          |
-          v
-Grafana dashboards and alerts
+Grafana dashboards + 4 alert rules → webhook notifications
+```
+
+## Quick start
+
+```bash
+# Clone and install
+git clone https://github.com/EricksonDATA/DataPulse.git
+cd DataPulse
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+pip install -e ".[dev]"
+
+# Run tests
+python -m pytest tests/ -q
+
+# Start the stack (Docker required)
+docker compose up -d
+
+# Run the healthcare adapter
+python -m datapulse.adapters.healthcare_analytics \
+    --source /app/examples/fixtures/healthcare_admissions.csv \
+    --target /app/examples/fixtures/healthcare_fact_admission.csv \
+    --api-url http://localhost:8000
+
+# Run the ecommerce orders adapter
+python -m datapulse.adapters.ecommerce_orders \
+    --source /app/examples/fixtures/ecommerce_orders.csv \
+    --target /app/examples/fixtures/ecommerce_order_facts.csv \
+    --api-url http://localhost:8000
+
+# Open Grafana dashboard
+# http://localhost:3000 (admin/admin)
 ```
 
 ## Core capabilities
 
-DataPulse will provide a central place to:
+| Capability | Status |
+|---|---|
+| Pipeline and dataset registration | ✅ |
+| Versioned data contracts (schema, freshness, quality) | ✅ |
+| 5 quality checks (readability, schema, target schema, row count, freshness) | ✅ |
+| Run lifecycle with idempotent submissions | ✅ |
+| Incident creation and ownership tracking | ✅ |
+| Grafana dashboard with 7 panels | ✅ |
+| 4 alert rules (pipeline failed, freshness, incidents, schema drift) | ✅ |
+| Webhook notification delivery | ✅ |
+| PostgreSQL + SQLite dual-database support | ✅ |
+| Alembic migrations | ✅ |
+| GitHub Actions CI (5 jobs) | ✅ |
+| Branch protection | ✅ |
+| Operational runbook | ✅ |
 
-1. Register pipelines and their datasets.
-2. Store expected schemas and freshness requirements.
-3. Record every pipeline run and its outcome.
-4. Validate row counts, null rates, duplicates, freshness, and accepted values.
-5. Detect schema drift and unexpected source changes.
-6. Create incidents for failed or late data.
-7. Track ownership and retryability for failures.
-8. Display pipeline health in dashboards.
-9. Send alerts through email, Slack, or webhooks.
-10. Connect existing projects as monitored pipelines.
+## Integrating a new pipeline
 
-## Recommended stack
+DataPulse is pipeline-agnostic. To monitor a new pipeline, create two things:
 
-| Area | Technology | Purpose |
-| --- | --- | --- |
-| Language | Python | SDK, CLI, validation, and platform services |
-| Metadata API | FastAPI | Documented endpoints for pipeline and dataset metadata |
-| Control database | PostgreSQL | Pipeline runs, datasets, contracts, incidents, and ownership |
-| Data quality | Great Expectations or custom SQL checks | Reusable validation rules |
-| Lineage | OpenLineage | Job, run, input, and output metadata |
-| Observability | Grafana | Dashboards, alert rules, and operational visibility |
-| Local development | Docker Compose | Reproducible local services |
-| CI/CD | GitHub Actions | Automated tests and delivery workflows |
+### 1. Contract definition
 
-SQLite can be used initially if PostgreSQL setup becomes a distraction during early development. PostgreSQL is the intended control database for the platform.
+Create `src/datapulse/contracts/your_pipeline.py`:
 
-Useful references:
+```python
+PIPELINE_NAME = "your_pipeline"
+PIPELINE_OWNER = "your-team"
 
-- [FastAPI documentation](https://fastapi.tiangolo.com/)
-- [Great Expectations validation](https://docs.greatexpectations.io/docs/core/run_validations/)
-- [OpenLineage specification](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.md)
-- [Grafana alerting](https://grafana.com/docs/grafana/latest/alerting/alerting-rules/link-alert-rules-to-panels/)
+SOURCE_SCHEMA = {
+    "id": {"type": "string", "nullable": False},
+    "value": {"type": "decimal", "nullable": False},
+    "created_at": {"type": "timestamp", "nullable": False},
+}
 
-## MVP scope
+SOURCE_FRESHNESS = {
+    "max_age_hours": 24,
+    "timestamp_column": "created_at",
+}
 
-The first version should focus on a complete monitoring loop for one existing pipeline:
+SOURCE_QUALITY = {
+    "unique_keys": ["id"],
+    "min_row_count": 100,
+    "max_row_count": 1000000,
+}
 
-- Register a pipeline and its datasets.
-- Define expected schemas and freshness requirements.
-- Capture pipeline run metadata.
-- Run basic data quality checks.
-- Detect schema drift.
-- Persist failures and incidents.
-- Show pipeline health in Grafana.
-- Send an alert when a run fails, arrives late, or violates a contract.
-- Connect one existing project as the first monitored pipeline.
-
-## Example run record
-
-```yaml
-pipeline_name: healthcare_analytics
-run_id: 2026-08-18-001
-status: failed
-source_row_count: 680000
-target_row_count: 679842
-freshness_status: passed
-schema_status: failed
-quality_status: failed
-failure_reason: unexpected column added
+# Optional: target contract for source-to-target reconciliation
+TARGET_SCHEMA = {
+    "id": {"type": "string", "nullable": False},
+    "value": {"type": "decimal", "nullable": False},
+}
 ```
 
-This record makes the run outcome actionable: freshness passed, while schema and quality checks failed because the source contained an unexpected column.
+### 2. Adapter
 
-## Why DataPulse?
+Create `src/datapulse/adapters/your_pipeline.py`:
 
-Existing projects already demonstrate experience with:
+```python
+import sys
+import uuid
+from datetime import datetime, timezone
 
-- Databricks and S3
-- Medallion architecture
-- Batch and incremental processing
-- dbt and Spark
-- Dimensional modeling
-- BI dashboards
+from datapulse.contracts.your_pipeline import (
+    PIPELINE_NAME, PIPELINE_OWNER,
+    SOURCE_SCHEMA, SOURCE_FRESHNESS, SOURCE_QUALITY,
+)
+from datapulse.sdk import DataPulseClient
 
-DataPulse adds the platform capabilities that are often missing from individual analytics projects:
 
-- API development
-- Metadata modeling
-- Platform engineering
-- Data contracts
-- Observability and alerting
-- Incident management
-- Reusable tooling
-- CI/CD and containerization
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--source", required=True)
+    parser.add_argument("--api-url", default="http://localhost:8000")
+    args = parser.parse_args()
 
-The result is a platform that ties existing projects together instead of creating another disconnected pipeline.
+    client = DataPulseClient(args.api_url)
 
-## Project direction
+    # Register
+    client.register_pipeline(PIPELINE_NAME, PIPELINE_OWNER)
+    client.register_dataset(
+        pipeline_name=PIPELINE_NAME,
+        dataset_name="your_source",
+        role="source",
+        contract_version=1,
+        schema_definition=SOURCE_SCHEMA,
+        freshness=SOURCE_FRESHNESS,
+        quality_rules=SOURCE_QUALITY,
+    )
 
-**DataPulse: A Data Contract and Pipeline Observability Platform**
+    # Run
+    run_id = f"{datetime.now(timezone.utc).strftime('%Y-%m-%d')}-{uuid.uuid4().hex[:6]}"
+    result = client.submit_run(
+        pipeline_name=PIPELINE_NAME,
+        run_id=run_id,
+        source_path=args.source,
+    )
 
-The long-term goal is to make pipeline health, data validity, ownership, and recovery visible from one operational interface.
+    if result["status"] != "passed":
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+### 3. Run it
+
+```bash
+python -m datapulse.adapters.your_pipeline --source /path/to/data.csv
+```
+
+That's it. DataPulse handles:
+- Pipeline and dataset registration (idempotent)
+- Contract storage and versioning
+- All 5 quality checks
+- Incident creation and ownership
+- Dashboard and alert integration
+
+No changes to the core are needed.
+
+## API endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/health` | API availability |
+| GET | `/ready` | API + database readiness |
+| POST | `/pipelines` | Register pipeline |
+| POST | `/datasets` | Register dataset + contract |
+| POST | `/runs` | Submit a run |
+| GET | `/pipelines/{name}/runs` | List runs (paginated, filterable) |
+| GET | `/pipelines/{name}/runs/{run_id}` | Get run details |
+| GET | `/pipelines/{name}/health` | Latest run health |
+| GET | `/pipelines/{name}/incidents` | List open incidents |
+| GET | `/datasets/{name}/contract` | Get contract summary |
+| POST | `/runs/{run_id}/acknowledge` | Acknowledge incidents |
+| POST | `/webhook/receiver` | Receive alert webhooks |
+| GET | `/webhook/log` | View webhook history |
+
+## Grafana dashboard
+
+Provisioned at `http://localhost:3000/d/datapulse-health` with 7 panels:
+
+1. **Pipeline Status** — latest run per pipeline
+2. **Run History** — timeline of all runs
+3. **Freshness: Age vs Threshold** — data age vs contract limit
+4. **Row Counts: Source vs Target** — reconciliation bar chart
+5. **Failed Checks by Type** — pie chart of check failures
+6. **Open Incidents** — unresolved incidents by owner
+7. **Recent Schema Drift Events** — schema failures in last 30 days
+
+4 alert rules fire to the webhook at `http://api:8000/webhook/receiver`.
+
+## Monitored pipelines
+
+| Pipeline | Adapter | Data type | Freshness |
+|---|---|---|---|
+| healthcare_analytics | `adapters/healthcare_analytics.py` | CSV (hospital admissions) | 72h |
+| ecommerce_orders | `adapters/ecommerce_orders.py` | CSV (daily orders) | 12h |
+
+## Project structure
+
+```
+DataPulse/
+├── src/datapulse/
+│   ├── api/            # FastAPI endpoints
+│   ├── adapters/       # Pipeline adapters
+│   ├── checks/         # Quality check implementations
+│   ├── contracts/      # Contract definitions
+│   ├── db/             # Repositories
+│   ├── models/         # SQLAlchemy models
+│   ├── services/       # Business logic
+│   ├── sdk.py          # Python SDK
+│   └── cli.py          # CLI entry point
+├── tests/
+│   ├── unit/           # Check tests
+│   └── integration/    # API + PostgreSQL tests
+├── grafana/            # Dashboard + alert provisioning
+├── migrations/         # Alembic migrations
+├── examples/fixtures/  # Test data (synthetic only)
+├── docker-compose.yml  # PostgreSQL + API + Grafana
+├── Dockerfile          # API container
+├── RUNBOOK.md          # Operational runbook
+└── pyproject.toml      # Project config
+```
 
 ## Status
 
-Phase 1 complete. Core monitoring loop implemented: pipeline registration, data contracts, run lifecycle with 4 validation checks, incident creation, structured logging, and 35 automated tests. Demo available via `datapulse demo`.
+**v0.1.0** — Phase 2 complete, Phase 3 in progress.
+
+- 53 tests passing, 7 SQLite-specific skipped
+- CI pipeline: 5 jobs (lint, sqlite, postgresql, migrations, cli)
+- Branch protection: requires CI before merge
 
 ## Guides
 
 - [Phase 1 guide](phase-1-guide.md)
 - [Phase 2 guide](phase-2-guide.md)
+- [Operational runbook](RUNBOOK.md)
