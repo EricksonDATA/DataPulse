@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
+from datapulse.api.auth import get_api_key
 from datapulse.api.deps import get_db
 from datapulse.api.schemas import (
     ContractSummary,
@@ -49,7 +50,7 @@ def health():
 
 
 @app.post("/pipelines", response_model=PipelineResponse, status_code=201)
-def register_pipeline(data: PipelineCreate, db: Session = Depends(get_db)):
+def register_pipeline(data: PipelineCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Register a new pipeline."""
     repo = PipelineRepository(db)
     pipeline = repo.get_or_create(name=data.name, owner=data.owner)
@@ -65,7 +66,7 @@ def register_pipeline(data: PipelineCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/datasets", response_model=DatasetResponse, status_code=201)
-def register_dataset(data: DatasetCreate, db: Session = Depends(get_db)):
+def register_dataset(data: DatasetCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Register a dataset and its contract for a pipeline."""
     pipeline_repo = PipelineRepository(db)
     pipeline = pipeline_repo.get_by_name(data.pipeline_name)
@@ -101,7 +102,7 @@ def register_dataset(data: DatasetCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/runs", response_model=RunHealthResponse, status_code=201)
-def submit_run(data: RunSubmit, db: Session = Depends(get_db)):
+def submit_run(data: RunSubmit, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Submit a pipeline run. Idempotent — same run_id returns existing result."""
     source_path = Path(data.source_path)
     target_path = Path(data.target_path) if data.target_path else None
@@ -127,7 +128,7 @@ def submit_run(data: RunSubmit, db: Session = Depends(get_db)):
 
 
 @app.get("/pipelines/{name}/runs/{run_id}", response_model=RunHealthResponse)
-def get_run_health(name: str, run_id: str, db: Session = Depends(get_db)):
+def get_run_health(name: str, run_id: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Retrieve one run's health summary."""
     pipeline_repo = PipelineRepository(db)
     pipeline = pipeline_repo.get_by_name(name)
@@ -147,7 +148,7 @@ def get_run_health(name: str, run_id: str, db: Session = Depends(get_db)):
 
 
 @app.get("/pipelines/{name}/health", response_model=RunHealthResponse)
-def get_pipeline_health(name: str, db: Session = Depends(get_db)):
+def get_pipeline_health(name: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Retrieve the latest health for a pipeline."""
     pipeline_repo = PipelineRepository(db)
     pipeline = pipeline_repo.get_by_name(name)
@@ -168,12 +169,13 @@ def get_pipeline_health(name: str, db: Session = Depends(get_db)):
 
 @app.get("/pipelines/{name}/runs", response_model=list[RunListItem])
 def list_pipeline_runs(
-    name: str,
-    status: str | None = None,
-    limit: int = 20,
-    offset: int = 0,
-    db: Session = Depends(get_db),
-):
+        name: str,
+        status: str | None = None,
+        limit: int = 20,
+        offset: int = 0,
+        db: Session = Depends(get_db),
+        api_key: str = Depends(get_api_key),
+    ):
     """List recent runs for a pipeline with optional status filter."""
     pipeline_repo = PipelineRepository(db)
     pipeline = pipeline_repo.get_by_name(name)
@@ -214,10 +216,11 @@ def list_pipeline_runs(
 
 @app.get("/pipelines/{name}/incidents", response_model=list[IncidentListItem])
 def list_pipeline_incidents(
-    name: str,
-    limit: int = 20,
-    db: Session = Depends(get_db),
-):
+        name: str,
+        limit: int = 20,
+        db: Session = Depends(get_db),
+        api_key: str = Depends(get_api_key),
+    ):
     """List open incidents for a pipeline."""
     pipeline_repo = PipelineRepository(db)
     pipeline = pipeline_repo.get_by_name(name)
@@ -251,10 +254,11 @@ def list_pipeline_incidents(
 
 @app.get("/datasets/{name}/contract", response_model=ContractSummary)
 def get_dataset_contract(
-    name: str,
-    pipeline_name: str | None = None,
-    db: Session = Depends(get_db),
-):
+        name: str,
+        pipeline_name: str | None = None,
+        db: Session = Depends(get_db),
+        api_key: str = Depends(get_api_key),
+    ):
     """Retrieve the active contract summary for a dataset."""
     dataset_repo = DatasetRepository(db)
     contract_repo = ContractRepository(db)
@@ -311,7 +315,7 @@ def readiness(db: Session = Depends(get_db)):
 
 
 @app.post("/runs/{run_id}/acknowledge")
-def acknowledge_run(run_id: str, db: Session = Depends(get_db)):
+def acknowledge_run(run_id: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Acknowledge a run's incidents — marks them as acknowledged."""
     run_repo = RunRepository(db)
     run = run_repo.find_by_run_id(run_id)
@@ -336,7 +340,7 @@ def acknowledge_run(run_id: str, db: Session = Depends(get_db)):
 
 
 @app.post("/webhook/receiver")
-def webhook_receiver(payload: dict, db: Session = Depends(get_db)):
+def webhook_receiver(payload: dict, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Receive and log webhook notifications from Grafana alerts."""
     from datapulse.models.notification import Notification
 
@@ -359,7 +363,7 @@ def webhook_receiver(payload: dict, db: Session = Depends(get_db)):
 
 
 @app.get("/webhook/log")
-def get_webhook_log(limit: int = 20, db: Session = Depends(get_db)):
+def get_webhook_log(limit: int = 20, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """View recent webhook notifications from the database."""
     from datapulse.models.notification import Notification
 
