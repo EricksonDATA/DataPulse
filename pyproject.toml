@@ -19,6 +19,9 @@ dev = [
     "httpx>=0.27,<1",
     "ruff>=0.5,<1",
 ]
+s3 = [
+    "boto3>=1.34,<2",
+]
 
 [project.scripts]
 datapulse = "datapulse.cli:main"

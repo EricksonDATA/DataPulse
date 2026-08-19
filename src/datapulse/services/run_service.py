@@ -124,6 +124,22 @@ class RunService:
             if target_dataset is not None:
                 target_contract = self.contract_repo.get_latest(target_dataset.id)
 
+        # 3c. Concurrent-run protection
+        running_runs = self.run_repo.get_runs_for_pipeline(
+            pipeline_id=pipeline.id,
+            status="running",
+            limit=10,
+        )
+        max_concurrent = 3  # Configurable limit
+        if len(running_runs) >= max_concurrent:
+            from datapulse.errors import ConcurrentLimitError
+
+            raise ConcurrentLimitError(
+                pipeline_name=pipeline_name,
+                current_count=len(running_runs),
+                max_concurrent=max_concurrent,
+            )
+
         # 4. Create run → status = RUNNING
         run = self.run_repo.create(pipeline.id, run_id, effective_version)
         self.run_repo.update_status(run, RunStatus.RUNNING)
