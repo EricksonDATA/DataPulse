@@ -169,13 +169,13 @@ def get_pipeline_health(name: str, db: Session = Depends(get_db), api_key: str =
 
 @app.get("/pipelines/{name}/runs", response_model=list[RunListItem])
 def list_pipeline_runs(
-        name: str,
-        status: str | None = None,
-        limit: int = 20,
-        offset: int = 0,
-        db: Session = Depends(get_db),
-        api_key: str = Depends(get_api_key),
-    ):
+    name: str,
+    status: str | None = None,
+    limit: int = 20,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    api_key: str = Depends(get_api_key),
+):
     """List recent runs for a pipeline with optional status filter."""
     pipeline_repo = PipelineRepository(db)
     pipeline = pipeline_repo.get_by_name(name)
@@ -216,11 +216,11 @@ def list_pipeline_runs(
 
 @app.get("/pipelines/{name}/incidents", response_model=list[IncidentListItem])
 def list_pipeline_incidents(
-        name: str,
-        limit: int = 20,
-        db: Session = Depends(get_db),
-        api_key: str = Depends(get_api_key),
-    ):
+    name: str,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    api_key: str = Depends(get_api_key),
+):
     """List open incidents for a pipeline."""
     pipeline_repo = PipelineRepository(db)
     pipeline = pipeline_repo.get_by_name(name)
@@ -254,11 +254,11 @@ def list_pipeline_incidents(
 
 @app.get("/datasets/{name}/contract", response_model=ContractSummary)
 def get_dataset_contract(
-        name: str,
-        pipeline_name: str | None = None,
-        db: Session = Depends(get_db),
-        api_key: str = Depends(get_api_key),
-    ):
+    name: str,
+    pipeline_name: str | None = None,
+    db: Session = Depends(get_db),
+    api_key: str = Depends(get_api_key),
+):
     """Retrieve the active contract summary for a dataset."""
     dataset_repo = DatasetRepository(db)
     contract_repo = ContractRepository(db)
@@ -340,8 +340,15 @@ def acknowledge_run(run_id: str, db: Session = Depends(get_db), api_key: str = D
 
 
 @app.post("/webhook/receiver")
-def webhook_receiver(payload: dict, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    """Receive and log webhook notifications from Grafana alerts."""
+def webhook_receiver(payload: dict, db: Session = Depends(get_db)):
+    """Receive and log webhook notifications from Grafana alerts.
+
+    This endpoint is intentionally public — Grafana calls it automatically
+    and cannot easily send custom headers. Security is provided by:
+    1. The endpoint only accepts POST with JSON body
+    2. Grafana is configured to send to http://api:8000 (internal Docker network)
+    3. The endpoint does not expose sensitive data
+    """
     from datapulse.models.notification import Notification
 
     # Extract alert name from payload if present
@@ -367,12 +374,7 @@ def get_webhook_log(limit: int = 20, db: Session = Depends(get_db), api_key: str
     """View recent webhook notifications from the database."""
     from datapulse.models.notification import Notification
 
-    notifications = (
-        db.query(Notification)
-        .order_by(Notification.created_at.desc())
-        .limit(min(limit, 100))
-        .all()
-    )
+    notifications = db.query(Notification).order_by(Notification.created_at.desc()).limit(min(limit, 100)).all()
 
     return [
         {

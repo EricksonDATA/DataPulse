@@ -69,11 +69,7 @@ def get_operational_metrics(db: Session) -> dict:
     failed_checks_dist = {check_type.value: count for check_type, count in failed_checks}
 
     # Open incidents
-    open_incidents = (
-        db.query(func.count(Incident.id))
-        .filter(Incident.status == IncidentStatus.OPEN)
-        .scalar()
-    ) or 0
+    open_incidents = (db.query(func.count(Incident.id)).filter(Incident.status == IncidentStatus.OPEN).scalar()) or 0
 
     # Notification delivery (last 24h)
     notifications_24h = (

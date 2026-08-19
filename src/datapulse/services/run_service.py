@@ -60,7 +60,27 @@ class RunService:
 
         This is the main entry point — handles the full lifecycle.
         Idempotent: submitting the same run_id twice returns the same result.
+
+        Accepts both raw Path objects and DatasetReference URIs.
+        If a DatasetReference URI is provided (e.g., "s3://..."), it is
+        resolved before running checks.
         """
+        from datapulse.references import DatasetReference
+
+        # Resolve source reference
+        source_ref = DatasetReference.from_legacy_path(str(source_path))
+        source_resolved = source_ref.resolve()
+        if not source_resolved.is_parseable:
+            raise ValueError(f"Cannot resolve source: {source_resolved.error}")
+
+        # Resolve target reference if provided
+        target_ref = None
+        target_resolved = None
+        if target_path:
+            target_ref = DatasetReference.from_legacy_path(str(target_path))
+            target_resolved = target_ref.resolve()
+            if not target_resolved.is_parseable:
+                raise ValueError(f"Cannot resolve target: {target_resolved.error}")
         # 1. Ensure pipeline and dataset exist
         pipeline = self.pipeline_repo.get_by_name(pipeline_name)
         if pipeline is None:

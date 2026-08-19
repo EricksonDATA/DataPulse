@@ -176,12 +176,21 @@ class DatasetReference:
     def _resolve_s3(self, s3_client=None) -> ResolvedData:
         """Resolve an S3 reference.
 
-        If s3_client is None, returns a mock resolution for testing.
+        If s3_client is None and DATAPULSE_S3_MOCK=true, returns mock data.
+        If s3_client is None and mock mode is not enabled, returns an error.
         In production, uses boto3 to download and parse the object.
         """
+        import os
+
+        mock_enabled = os.environ.get("DATAPULSE_S3_MOCK", "").lower() == "true"
+
         if s3_client is None:
-            # Mock mode for testing — return a synthetic resolution
-            return self._resolve_s3_mock()
+            if mock_enabled:
+                return self._resolve_s3_mock()
+            return ResolvedData.from_error(
+                self.uri,
+                "S3 client required. Set DATAPULSE_S3_MOCK=true for testing or provide a boto3 client.",
+            )
 
         try:
             # Parse bucket and key from raw_path

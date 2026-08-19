@@ -70,7 +70,6 @@ class TestResolvedData:
         assert rd.columns == []
 
     def test_successful_resolution(self, tmp_path):
-        # Create a test CSV
         csv_file = tmp_path / "test.csv"
         csv_file.write_text("id,name\n1,Alice\n2,Bob\n", encoding="utf-8")
 
@@ -133,11 +132,12 @@ class TestLocalResolver:
 
 
 class TestS3MockResolver:
-    """Test S3 resolution in mock mode (no AWS credentials)."""
+    """Test S3 resolution in mock mode (requires DATAPULSE_S3_MOCK=true)."""
 
-    def test_s3_mock_returns_synthetic_data(self):
+    def test_s3_mock_returns_synthetic_data(self, monkeypatch):
+        monkeypatch.setenv("DATAPULSE_S3_MOCK", "true")
         ref = DatasetReference.from_uri("s3://bucket/orders.parquet")
-        rd = ref.resolve()  # No s3_client = mock mode
+        rd = ref.resolve()
 
         assert rd.is_parseable is True
         assert rd.row_count == 10
@@ -145,17 +145,23 @@ class TestS3MockResolver:
         assert rd.rows[0]["order_id"] == "MOCK-001"
         assert rd.source_uri == "s3://bucket/orders.parquet"
 
-    def test_s3_mock_different_uris(self):
+    def test_s3_without_client_and_no_mock_fails(self):
+        ref = DatasetReference.from_uri("s3://bucket/orders.parquet")
+        rd = ref.resolve()
+
+        assert rd.is_parseable is False
+        assert "S3 client required" in rd.error
+
+    def test_s3_mock_different_uris(self, monkeypatch):
+        monkeypatch.setenv("DATAPULSE_S3_MOCK", "true")
         ref1 = DatasetReference.from_uri("s3://bucket-a/data.csv")
         ref2 = DatasetReference.from_uri("s3://bucket-b/data.csv")
 
         rd1 = ref1.resolve()
         rd2 = ref2.resolve()
 
-        # Both resolve successfully
         assert rd1.is_parseable is True
         assert rd2.is_parseable is True
-        # Source URIs are different
         assert rd1.source_uri != rd2.source_uri
 
 

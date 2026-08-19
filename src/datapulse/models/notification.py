@@ -16,9 +16,7 @@ class Notification(Base):
     """
 
     __tablename__ = "notifications"
-    __table_args__ = (
-        Index("ix_notifications_created_at", "created_at"),
-    )
+    __table_args__ = (Index("ix_notifications_created_at", "created_at"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     alert_name: Mapped[str | None] = mapped_column(String, nullable=True)

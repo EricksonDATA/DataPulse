@@ -134,7 +134,7 @@ jobs:
           import os
           engine = create_engine(os.environ['DATAPULSE_DATABASE_URL'])
           tables = sorted(inspect(engine).get_table_names())
-          expected = ['alembic_version', 'check_results', 'contracts', 'datasets', 'incidents', 'pipeline_runs', 'pipelines']
+          expected = ['alembic_version', 'check_results', 'contracts', 'datasets', 'incidents', 'notifications', 'pipeline_runs', 'pipelines']
           assert tables == expected, f'Tables mismatch: {tables} != {expected}'
           print(f'Migration OK: {len(tables)} tables created')
           "
