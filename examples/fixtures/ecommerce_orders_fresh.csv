@@ -1,0 +1,102 @@
+order_id,customer_id,order_date,product_id,product_name,category,quantity,unit_price,total_amount,payment_method,shipping_address,status
+ORD-001,CUST-1001,2026-08-19,PROD-201,Wireless Headphones,Electronics,2,49.99,99.98,Credit Card,123 Main St,completed
+ORD-002,CUST-1002,2026-08-19,PROD-202,Running Shoes,Sports,1,129.99,129.99,PayPal,456 Oak Ave,completed
+ORD-003,CUST-1003,2026-08-19,PROD-203,Python Book,Books,1,39.99,39.99,Credit Card,789 Pine Rd,completed
+ORD-004,CUST-1004,2026-08-19,PROD-204,Water Bottle,Home,3,24.99,74.97,Debit Card,321 Elm St,shipped
+ORD-005,CUST-1005,2026-08-19,PROD-205,Yoga Mat,Sports,1,59.99,59.99,Credit Card,654 Maple Dr,completed
+ORD-006,CUST-1006,2026-08-19,PROD-206,Bluetooth Speaker,Electronics,1,79.99,79.99,PayPal,987 Cedar Ln,completed
+ORD-007,CUST-1007,2026-08-19,PROD-207,Coffee Beans,Food,2,18.99,37.98,Credit Card,147 Birch St,shipped
+ORD-008,CUST-1008,2026-08-19,PROD-208,Laptop Stand,Electronics,1,45.99,45.99,Debit Card,258 Walnut Ave,completed
+ORD-009,CUST-1009,2026-08-19,PROD-209,Resistance Bands,Sports,1,29.99,29.99,Credit Card,369 Spruce Rd,completed
+ORD-010,CUST-1010,2026-08-19,PROD-210,LED Desk Lamp,Home,1,34.99,34.99,PayPal,480 Willow Dr,completed
+ORD-011,CUST-1011,2026-08-19,PROD-211,Mechanical Keyboard,Electronics,1,89.99,89.99,Credit Card,111 Oak St,completed
+ORD-012,CUST-1012,2026-08-19,PROD-212,Protein Powder,Food,2,34.99,69.98,PayPal,222 Pine Ave,shipped
+ORD-013,CUST-1013,2026-08-19,PROD-213,Backpack,Accessories,1,59.99,59.99,Credit Card,333 Elm Rd,completed
+ORD-014,CUST-1014,2026-08-19,PROD-214,Sunglasses,Accessories,1,29.99,29.99,Debit Card,444 Cedar Dr,completed
+ORD-015,CUST-1015,2026-08-19,PROD-215,Notebook,Stationery,3,9.99,29.97,Credit Card,555 Birch Ave,completed
+ORD-016,CUST-1016,2026-08-19,PROD-216,USB Cable,Electronics,2,12.99,25.98,PayPal,666 Walnut Rd,completed
+ORD-017,CUST-1017,2026-08-19,PROD-217,Face Mask,Health,5,4.99,24.95,Credit Card,777 Spruce Ave,completed
+ORD-018,CUST-1018,2026-08-19,PROD-218,Hand Sanitizer,Health,3,7.99,23.97,Debit Card,888 Willow Rd,completed
+ORD-019,CUST-1019,2026-08-19,PROD-219,Bluetooth Earbuds,Electronics,1,49.99,49.99,Credit Card,999 Oak Dr,completed
+ORD-020,CUST-1020,2026-08-19,PROD-220,Desk Organizer,Home,1,24.99,24.99,PayPal,101 Pine St,completed
+ORD-021,CUST-1021,2026-08-19,PROD-221,Running Socks,Sports,3,14.99,44.97,Credit Card,202 Elm Ave,completed
+ORD-022,CUST-1022,2026-08-19,PROD-222,Phone Case,Accessories,1,19.99,19.99,Debit Card,303 Cedar Rd,completed
+ORD-023,CUST-1023,2026-08-19,PROD-223,Webcam,Electronics,1,69.99,69.99,Credit Card,404 Birch Dr,completed
+ORD-024,CUST-1024,2026-08-19,PROD-224,Mouse Pad,Accessories,1,14.99,14.99,PayPal,505 Walnut Ave,completed
+ORD-025,CUST-1025,2026-08-19,PROD-225,Desk Lamp,Home,1,39.99,39.99,Credit Card,606 Spruce St,completed
+ORD-026,CUST-1026,2026-08-19,PROD-226,Water Filter,Home,1,29.99,29.99,Debit Card,707 Willow Ave,completed
+ORD-027,CUST-1027,2026-08-19,PROD-227,Jump Rope,Sports,1,19.99,19.99,Credit Card,808 Oak Rd,completed
+ORD-028,CUST-1028,2026-08-19,PROD-228,Calculator,Electronics,1,15.99,15.99,PayPal,909 Pine Dr,completed
+ORD-029,CUST-1029,2026-08-19,PROD-229,Sticky Notes,Stationery,5,3.99,19.95,Credit Card,111 Elm St,completed
+ORD-030,CUST-1030,2026-08-19,PROD-230,Pencil Case,Stationery,2,8.99,17.98,Debit Card,222 Cedar Ave,completed
+ORD-031,CUST-1031,2026-08-19,PROD-231,Hand Towel,Home,4,6.99,27.96,Credit Card,333 Birch Rd,completed
+ORD-032,CUST-1032,2026-08-19,PROD-232,Dumbbell Set,Sports,1,49.99,49.99,PayPal,444 Walnut Dr,completed
+ORD-033,CUST-1033,2026-08-19,PROD-233,Extension Cord,Electronics,1,24.99,24.99,Credit Card,555 Spruce Ave,completed
+ORD-034,CUST-1034,2026-08-19,PROD-234,Pill Organizer,Health,1,12.99,12.99,Debit Card,666 Willow St,completed
+ORD-035,CUST-1035,2026-08-19,PROD-235,Keychain,Accessories,2,7.99,15.98,Credit Card,777 Oak Ave,completed
+ORD-036,CUST-1036,2026-08-19,PROD-236,Playing Cards,Entertainment,1,9.99,9.99,PayPal,888 Pine Rd,completed
+ORD-037,CUST-1037,2026-08-19,PROD-237,Bookmark,Stationery,3,2.99,8.97,Credit Card,999 Elm Dr,completed
+ORD-038,CUST-1038,2026-08-19,PROD-238,Candle,Home,2,14.99,29.98,Debit Card,101 Cedar St,completed
+ORD-039,CUST-1039,2026-08-19,PROD-239,Tape Roll,Stationery,4,3.99,15.96,Credit Card,202 Birch Ave,completed
+ORD-040,CUST-1040,2026-08-19,PROD-240,Coaster Set,Home,1,12.99,12.99,PayPal,303 Walnut Rd,completed
+ORD-041,CUST-1041,2026-08-19,PROD-241,Puzzle,Entertainment,1,19.99,19.99,Credit Card,404 Spruce Dr,completed
+ORD-042,CUST-1042,2026-08-19,PROD-242,Rubber Bands,Stationery,5,2.49,12.45,Debit Card,505 Willow Ave,completed
+ORD-043,CUST-1043,2026-08-19,PROD-243,Eraser,Stationery,3,1.99,5.97,Credit Card,606 Oak St,completed
+ORD-044,CUST-1044,2026-08-19,PROD-244,Ruler,Stationery,2,3.49,6.98,PayPal,707 Pine Rd,completed
+ORD-045,CUST-1045,2026-08-19,PROD-245,Sharpener,Stationery,2,2.99,5.98,Credit Card,808 Elm Ave,completed
+ORD-046,CUST-1046,2026-08-19,PROD-246,Glue Stick,Stationery,3,2.49,7.47,Debit Card,909 Cedar Dr,completed
+ORD-047,CUST-1047,2026-08-19,PROD-247,Scissors,Stationery,1,8.99,8.99,Credit Card,111 Birch St,completed
+ORD-048,CUST-1048,2026-08-19,PROD-248,Paper Clips,Stationery,5,1.99,9.95,PayPal,222 Walnut Ave,completed
+ORD-049,CUST-1049,2026-08-19,PROD-249,Stapler,Stationery,1,12.99,12.99,Credit Card,303 Spruce Rd,completed
+ORD-050,CUST-1050,2026-08-19,PROD-250,Tape Dispenser,Stationery,1,14.99,14.99,Debit Card,404 Willow Dr,completed
+ORD-051,CUST-1051,2026-08-19,PROD-251,Whiteboard Marker,Stationery,4,4.99,19.96,Credit Card,505 Oak Ave,completed
+ORD-052,CUST-1052,2026-08-19,PROD-252,Desk Mat,Accessories,1,19.99,19.99,PayPal,606 Pine St,completed
+ORD-053,CUST-1053,2026-08-19,PROD-253,Cable Organizer,Accessories,1,15.99,15.99,Credit Card,707 Elm Rd,completed
+ORD-054,CUST-1054,2026-08-19,PROD-254,Monitor Stand,Electronics,1,39.99,39.99,Debit Card,808 Cedar Ave,completed
+ORD-055,CUST-1055,2026-08-19,PROD-255,Wrist Rest,Accessories,1,12.99,12.99,Credit Card,909 Birch Dr,completed
+ORD-056,CUST-1056,2026-08-19,PROD-256,Laptop Sleeve,Accessories,1,24.99,24.99,PayPal,101 Walnut St,completed
+ORD-057,CUST-1057,2026-08-19,PROD-257,Screen Protector,Accessories,2,9.99,19.98,Credit Card,202 Spruce Ave,completed
+ORD-058,CUST-1058,2026-08-19,PROD-258,Phone Stand,Accessories,1,14.99,14.99,Debit Card,303 Willow Rd,completed
+ORD-059,CUST-1059,2026-08-19,PROD-259,Charging Cable,Electronics,3,8.99,26.97,Credit Card,404 Oak Dr,completed
+ORD-060,CUST-1060,2026-08-19,PROD-260,Power Bank,Electronics,1,34.99,34.99,PayPal,505 Pine Ave,completed
+ORD-061,CUST-1061,2026-08-19,PROD-261,Travel Mug,Home,1,18.99,18.99,Credit Card,606 Elm St,completed
+ORD-062,CUST-1062,2026-08-19,PROD-262,Lunch Box,Home,1,22.99,22.99,Debit Card,707 Cedar Rd,completed
+ORD-063,CUST-1063,2026-08-19,PROD-263,Umbrella,Accessories,1,19.99,19.99,Credit Card,808 Birch Ave,completed
+ORD-064,CUST-1064,2026-08-19,PROD-264,Gloves,Sports,1,14.99,14.99,PayPal,909 Walnut Dr,completed
+ORD-065,CUST-1065,2026-08-19,PROD-265,Beanie,Sports,1,12.99,12.99,Credit Card,101 Spruce St,completed
+ORD-066,CUST-1066,2026-08-19,PROD-266,Scarf,Accessories,1,24.99,24.99,Debit Card,202 Willow Ave,completed
+ORD-067,CUST-1067,2026-08-19,PROD-267,Belt,Accessories,1,29.99,29.99,Credit Card,303 Oak Rd,completed
+ORD-068,CUST-1068,2026-08-19,PROD-268,Tie,Accessories,1,19.99,19.99,PayPal,404 Pine Dr,completed
+ORD-069,CUST-1069,2026-08-19,PROD-269,Cufflinks,Accessories,1,34.99,34.99,Credit Card,505 Elm Ave,completed
+ORD-070,CUST-1070,2026-08-19,PROD-270,Pocket Square,Accessories,1,14.99,14.99,Debit Card,606 Cedar St,completed
+ORD-071,CUST-1071,2026-08-19,PROD-271,Socks,Sports,3,6.99,20.97,Credit Card,707 Birch Rd,completed
+ORD-072,CUST-1072,2026-08-19,PROD-272,Undershirt,Accessories,2,12.99,25.98,PayPal,808 Walnut Ave,completed
+ORD-073,CUST-1073,2026-08-19,PROD-273,Pajamas,Accessories,1,29.99,29.99,Credit Card,909 Spruce Dr,completed
+ORD-074,CUST-1074,2026-08-19,PROD-274,Slippers,Home,1,19.99,19.99,Debit Card,101 Willow St,completed
+ORD-075,CUST-1075,2026-08-19,PROD-275,Bath Towel,Home,2,14.99,29.98,Credit Card,202 Oak Ave,completed
+ORD-076,CUST-1076,2026-08-19,PROD-276,Hand Soap,Health,3,4.99,14.97,PayPal,303 Pine Rd,completed
+ORD-077,CUST-1077,2026-08-19,PROD-277,Toothbrush,Health,2,3.99,7.98,Credit Card,404 Elm Dr,completed
+ORD-078,CUST-1078,2026-08-19,PROD-278,Shampoo,Health,1,8.99,8.99,Debit Card,505 Cedar Ave,completed
+ORD-079,CUST-1079,2026-08-19,PROD-279,Conditioner,Health,1,8.99,8.99,Credit Card,606 Birch St,completed
+ORD-080,CUST-1080,2026-08-19,PROD-280,Body Wash,Health,1,6.99,6.99,PayPal,707 Walnut Rd,completed
+ORD-081,CUST-1081,2026-08-19,PROD-281,Lotion,Health,1,9.99,9.99,Credit Card,808 Spruce Ave,completed
+ORD-082,CUST-1082,2026-08-19,PROD-282,Sunscreen,Health,1,12.99,12.99,Debit Card,909 Willow Dr,completed
+ORD-083,CUST-1083,2026-08-19,PROD-283,Lip Balm,Health,2,3.49,6.98,Credit Card,101 Oak St,completed
+ORD-084,CUST-1084,2026-08-19,PROD-284,Cotton Balls,Health,1,4.99,4.99,PayPal,202 Pine Ave,completed
+ORD-085,CUST-1085,2026-08-19,PROD-285,Band-Aids,Health,1,5.99,5.99,Credit Card,303 Elm Rd,completed
+ORD-086,CUST-1086,2026-08-19,PROD-286,Thermometer,Health,1,14.99,14.99,Debit Card,404 Cedar Dr,completed
+ORD-087,CUST-1087,2026-08-19,PROD-287,First Aid Kit,Health,1,24.99,24.99,Credit Card,505 Birch Ave,completed
+ORD-088,CUST-1088,2026-08-19,PROD-288,Vitamins,Health,1,19.99,19.99,PayPal,606 Walnut St,completed
+ORD-089,CUST-1089,2026-08-19,PROD-289,Protein Bar,Food,4,3.99,15.96,Credit Card,707 Spruce Rd,completed
+ORD-090,CUST-1090,2026-08-19,PROD-290,Trail Mix,Food,2,7.99,15.98,Debit Card,808 Willow Ave,completed
+ORD-091,CUST-1091,2026-08-19,PROD-291,Granola Bar,Food,5,2.49,12.45,Credit Card,909 Oak Dr,completed
+ORD-092,CUST-1092,2026-08-19,PROD-292,Dried Fruit,Food,2,6.99,13.98,PayPal,101 Pine St,completed
+ORD-093,CUST-1093,2026-08-19,PROD-293,Nuts,Food,3,8.99,26.97,Credit Card,202 Elm Ave,completed
+ORD-094,CUST-1094,2026-08-19,PROD-294,Chips,Food,4,3.99,15.96,Debit Card,303 Cedar Rd,completed
+ORD-095,CUST-1095,2026-08-19,PROD-295,Crackers,Food,2,4.99,9.98,Credit Card,404 Birch Dr,completed
+ORD-096,CUST-1096,2026-08-19,PROD-296,Cookies,Food,3,5.99,17.97,PayPal,505 Walnut Ave,completed
+ORD-097,CUST-1097,2026-08-19,PROD-297,Candy,Food,5,1.99,9.95,Credit Card,606 Spruce St,completed
+ORD-098,CUST-1098,2026-08-19,PROD-298,Gum,Food,3,1.49,4.47,Debit Card,707 Willow Ave,completed
+ORD-099,CUST-1099,2026-08-19,PROD-299,Mints,Food,2,2.49,4.98,Credit Card,808 Oak Rd,completed
+ORD-100,CUST-1100,2026-08-19,PROD-300,Chocolate Bar,Food,4,2.99,11.96,PayPal,909 Pine Dr,completed
+ORD-101,CUST-1101,2026-08-19,PROD-301,Ice Cream,Food,1,6.99,6.99,Credit Card,101 Elm St,completed

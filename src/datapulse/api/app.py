@@ -1,11 +1,11 @@
 """API routes — DataPulse endpoints."""
 
 import logging
-from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from sqlalchemy.orm import Session
 
+from datapulse.api.auth import get_api_key
 from datapulse.api.deps import get_db
 from datapulse.api.schemas import (
     ContractSummary,
@@ -49,7 +49,7 @@ def health():
 
 
 @app.post("/pipelines", response_model=PipelineResponse, status_code=201)
-def register_pipeline(data: PipelineCreate, db: Session = Depends(get_db)):
+def register_pipeline(data: PipelineCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Register a new pipeline."""
     repo = PipelineRepository(db)
     pipeline = repo.get_or_create(name=data.name, owner=data.owner)
@@ -65,7 +65,7 @@ def register_pipeline(data: PipelineCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/datasets", response_model=DatasetResponse, status_code=201)
-def register_dataset(data: DatasetCreate, db: Session = Depends(get_db)):
+def register_dataset(data: DatasetCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Register a dataset and its contract for a pipeline."""
     pipeline_repo = PipelineRepository(db)
     pipeline = pipeline_repo.get_by_name(data.pipeline_name)
@@ -101,18 +101,20 @@ def register_dataset(data: DatasetCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/runs", response_model=RunHealthResponse, status_code=201)
-def submit_run(data: RunSubmit, db: Session = Depends(get_db)):
-    """Submit a pipeline run. Idempotent — same run_id returns existing result."""
-    source_path = Path(data.source_path)
-    target_path = Path(data.target_path) if data.target_path else None
+def submit_run(data: RunSubmit, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    """Submit a pipeline run. Idempotent — same run_id returns existing result.
+
+    source_path and target_path are passed as raw strings to preserve URI schemes
+    (s3://, table://, query://, etc.). DatasetReference handles parsing.
+    """
     service = RunService(db)
 
     try:
         result = service.submit_run(
             pipeline_name=data.pipeline_name,
             run_id=data.run_id,
-            source_path=source_path,
-            target_path=target_path,
+            source_path=data.source_path,
+            target_path=data.target_path,
             dataset_name=data.dataset_name,
             target_dataset_name=data.target_dataset_name,
             contract_version=data.contract_version,
@@ -127,7 +129,7 @@ def submit_run(data: RunSubmit, db: Session = Depends(get_db)):
 
 
 @app.get("/pipelines/{name}/runs/{run_id}", response_model=RunHealthResponse)
-def get_run_health(name: str, run_id: str, db: Session = Depends(get_db)):
+def get_run_health(name: str, run_id: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Retrieve one run's health summary."""
     pipeline_repo = PipelineRepository(db)
     pipeline = pipeline_repo.get_by_name(name)
@@ -147,7 +149,7 @@ def get_run_health(name: str, run_id: str, db: Session = Depends(get_db)):
 
 
 @app.get("/pipelines/{name}/health", response_model=RunHealthResponse)
-def get_pipeline_health(name: str, db: Session = Depends(get_db)):
+def get_pipeline_health(name: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Retrieve the latest health for a pipeline."""
     pipeline_repo = PipelineRepository(db)
     pipeline = pipeline_repo.get_by_name(name)
@@ -173,6 +175,7 @@ def list_pipeline_runs(
     limit: int = 20,
     offset: int = 0,
     db: Session = Depends(get_db),
+    api_key: str = Depends(get_api_key),
 ):
     """List recent runs for a pipeline with optional status filter."""
     pipeline_repo = PipelineRepository(db)
@@ -217,6 +220,7 @@ def list_pipeline_incidents(
     name: str,
     limit: int = 20,
     db: Session = Depends(get_db),
+    api_key: str = Depends(get_api_key),
 ):
     """List open incidents for a pipeline."""
     pipeline_repo = PipelineRepository(db)
@@ -254,6 +258,7 @@ def get_dataset_contract(
     name: str,
     pipeline_name: str | None = None,
     db: Session = Depends(get_db),
+    api_key: str = Depends(get_api_key),
 ):
     """Retrieve the active contract summary for a dataset."""
     dataset_repo = DatasetRepository(db)
@@ -311,7 +316,7 @@ def readiness(db: Session = Depends(get_db)):
 
 
 @app.post("/runs/{run_id}/acknowledge")
-def acknowledge_run(run_id: str, db: Session = Depends(get_db)):
+def acknowledge_run(run_id: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """Acknowledge a run's incidents — marks them as acknowledged."""
     run_repo = RunRepository(db)
     run = run_repo.find_by_run_id(run_id)
@@ -334,18 +339,69 @@ def acknowledge_run(run_id: str, db: Session = Depends(get_db)):
 
 # ── POST /webhook/receiver ─────────────────────────────────────
 
-_webhook_log: list[dict] = []
-
 
 @app.post("/webhook/receiver")
-def webhook_receiver(payload: dict):
-    """Receive and log webhook notifications from Grafana alerts."""
-    _webhook_log.append(payload)
-    logger.info("webhook_received", extra={"payload_keys": list(payload.keys())})
+def webhook_receiver(payload: dict, request: Request, db: Session = Depends(get_db)):
+    """Receive and log webhook notifications from Grafana alerts.
+
+    Security: If DATAPULSE_WEBHOOK_SECRET is set, the request must include
+    an X-Webhook-Secret header matching the configured value.
+    If not set, the endpoint is open (development mode).
+    """
+    import os
+
+    from datapulse.models.notification import Notification
+
+    # Validate webhook secret if configured
+    webhook_secret = os.environ.get("DATAPULSE_WEBHOOK_SECRET", "")
+    if webhook_secret:
+        provided_secret = request.headers.get("X-Webhook-Secret", "")
+        if provided_secret != webhook_secret:
+            raise HTTPException(status_code=403, detail="Invalid webhook secret")
+
+    # Extract alert name from payload if present
+    alert_name = None
+    alerts = payload.get("alerts", [])
+    if alerts:
+        alert_name = alerts[0].get("labels", {}).get("alertname")
+
+    notification = Notification(
+        alert_name=alert_name,
+        status=payload.get("status", "unknown"),
+        payload=payload,
+    )
+    db.add(notification)
+    db.commit()
+
+    logger.info("webhook_received", extra={"alert_name": alert_name})
     return {"status": "received"}
 
 
 @app.get("/webhook/log")
-def get_webhook_log(limit: int = 20):
-    """View recent webhook notifications."""
-    return _webhook_log[-limit:]
+def get_webhook_log(limit: int = 20, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    """View recent webhook notifications from the database."""
+    from datapulse.models.notification import Notification
+
+    notifications = db.query(Notification).order_by(Notification.created_at.desc()).limit(min(limit, 100)).all()
+
+    return [
+        {
+            "id": n.id,
+            "alert_name": n.alert_name,
+            "status": n.status,
+            "payload": n.payload,
+            "created_at": n.created_at.isoformat(),
+        }
+        for n in notifications
+    ]
+
+
+# ── GET /metrics ───────────────────────────────────────────────
+
+
+@app.get("/metrics")
+def get_metrics(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    """Operational metrics for DataPulse self-monitoring."""
+    from datapulse.metrics import get_operational_metrics
+
+    return get_operational_metrics(db)

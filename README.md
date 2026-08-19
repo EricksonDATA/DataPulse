@@ -202,6 +202,44 @@ No changes to the core are needed.
 | POST | `/runs/{run_id}/acknowledge` | Acknowledge incidents |
 | POST | `/webhook/receiver` | Receive alert webhooks |
 | GET | `/webhook/log` | View webhook history |
+| GET | `/metrics` | Operational metrics |
+
+## Authentication
+
+API key authentication is optional. Set `DATAPULSE_API_KEY` to enable:
+
+```bash
+# Enable authentication
+export DATAPULSE_API_KEY="your-secret-key"
+
+# All requests must include X-API-Key header
+curl -H "X-API-Key: your-secret-key" http://localhost:8000/pipelines
+
+# /health and /ready are always public
+curl http://localhost:8000/health  # No key needed
+```
+
+SDK usage with API key:
+
+```python
+client = DataPulseClient("http://localhost:8000", api_key="your-secret-key")
+```
+
+## Webhook security
+
+The webhook endpoint (`POST /webhook/receiver`) accepts Grafana alerts.
+
+Set `DATAPULSE_WEBHOOK_SECRET` to require a shared secret:
+
+```bash
+# In docker-compose.yml or .env
+DATAPULSE_WEBHOOK_SECRET=my-webhook-secret
+```
+
+When set, Grafana must send the secret in the `X-Webhook-Secret` header.
+Configure this in the Grafana webhook contact point settings.
+
+When not set (development mode), the webhook is open.
 
 ## Grafana dashboard
 

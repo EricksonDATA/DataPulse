@@ -127,15 +127,9 @@ class TestRunLifecycle:
                 "dataset_name": "inventory_snapshot",
             },
         )
-        d = r.json()
-        assert r.status_code == 201
-        assert d["status"] == "failed"
-        # Only readability check runs (short-circuit on failure)
-        assert len(d["checks"]) == 1
-        readability = d["checks"][0]
-        assert readability["type"] == "source_readability"
-        assert readability["status"] == "failed"
-        assert "not found" in readability["message"].lower()
+        # Reference validation fails fast with 400 (file not found)
+        assert r.status_code == 400
+        assert "cannot resolve" in r.json()["detail"].lower() or "not found" in r.json()["detail"].lower()
 
     def test_run_without_pipeline_returns_400(self, client, registered_dataset):
         r = client.post(
@@ -497,11 +491,9 @@ class TestSourceToTargetReconciliation:
                 "target_path": "nonexistent_target.csv",
             },
         )
-        d = r.json()
-        row_check = next(c for c in d["checks"] if c["type"] == "row_count")
-        assert row_check["status"] == "failed"
-        assert "target" in row_check["message"].lower()
-        assert "not found" in row_check["message"].lower()
+        # Reference validation fails fast with 400 (target file not found)
+        assert r.status_code == 400
+        assert "cannot resolve" in r.json()["detail"].lower() or "not found" in r.json()["detail"].lower()
 
 
 class TestListRuns:

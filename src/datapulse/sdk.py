@@ -23,14 +23,21 @@ logger = logging.getLogger("datapulse.sdk")
 class DataPulseClient:
     """HTTP client for the DataPulse metadata API."""
 
-    def __init__(self, base_url: str = "http://localhost:8000", timeout: float = 30.0):
+    def __init__(self, base_url: str = "http://localhost:8000", timeout: float = 30.0, api_key: str | None = None):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        self.api_key = api_key
 
     def _request(self, method: str, path: str, **kwargs) -> dict:
         """Make an HTTP request to the API."""
         url = f"{self.base_url}{path}"
         kwargs.setdefault("timeout", self.timeout)
+        # Add API key header if configured
+        headers = kwargs.pop("headers", {})
+        if self.api_key:
+            headers["X-API-Key"] = self.api_key
+        if headers:
+            kwargs["headers"] = headers
         response = getattr(httpx, method)(url, **kwargs)
         response.raise_for_status()
         return response.json()

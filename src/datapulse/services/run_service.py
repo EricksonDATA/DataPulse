@@ -2,7 +2,6 @@
 
 import logging
 import time
-from pathlib import Path
 
 from sqlalchemy.orm import Session
 
@@ -49,9 +48,9 @@ class RunService:
         self,
         pipeline_name: str,
         run_id: str,
-        source_path: Path,
-        target_path: Path | None = None,
-        dataset_name: str = "inventory_snapshot",
+        source_path: str,
+        dataset_name: str,
+        target_path: str | None = None,
         target_dataset_name: str | None = None,
         contract_version: int | None = None,
     ) -> dict:
@@ -60,7 +59,29 @@ class RunService:
 
         This is the main entry point — handles the full lifecycle.
         Idempotent: submitting the same run_id twice returns the same result.
+
+        source_path and target_path are raw strings that may be:
+        - Local file paths: "/data/file.csv"
+        - URIs: "s3://bucket/key.csv", "table://schema.table"
+
+        DatasetReference.from_uri() parses them correctly.
         """
+        from datapulse.references import DatasetReference
+
+        # Resolve source reference
+        source_ref = DatasetReference.from_uri(source_path)
+        source_resolved = source_ref.resolve()
+        if not source_resolved.is_parseable:
+            raise ValueError(f"Cannot resolve source: {source_resolved.error}")
+
+        # Resolve target reference if provided
+        target_ref = None
+        target_resolved = None
+        if target_path:
+            target_ref = DatasetReference.from_uri(target_path)
+            target_resolved = target_ref.resolve()
+            if not target_resolved.is_parseable:
+                raise ValueError(f"Cannot resolve target: {target_resolved.error}")
         # 1. Ensure pipeline and dataset exist
         pipeline = self.pipeline_repo.get_by_name(pipeline_name)
         if pipeline is None:
@@ -129,9 +150,9 @@ class RunService:
             result = self._execute_check(
                 check_type=check_type,
                 run_id=run.id,
-                source_path=source_path,
+                source_resolved=source_resolved,
                 contract=contract,
-                target_path=target_path,
+                target_resolved=target_resolved,
                 target_contract=target_contract,
             )
 
@@ -235,9 +256,9 @@ class RunService:
         self,
         check_type: CheckType,
         run_id: int,
-        source_path: Path,
+        source_resolved,
         contract,
-        target_path: Path | None = None,
+        target_resolved=None,
         target_contract=None,
     ) -> dict:
         """Execute a single check and return the result dict."""
@@ -247,17 +268,17 @@ class RunService:
         from datapulse.checks.source_readability import check_source_readability
 
         if check_type == CheckType.SOURCE_READABILITY:
-            return check_source_readability(source_path)
+            return check_source_readability(source_resolved)
         elif check_type == CheckType.SCHEMA_COMPATIBILITY:
-            return check_schema_compatibility(source_path, contract.schema_definition)
+            return check_schema_compatibility(source_resolved, contract.schema_definition)
         elif check_type == CheckType.TARGET_SCHEMA_COMPATIBILITY:
-            if target_path and target_contract:
-                return check_schema_compatibility(target_path, target_contract.schema_definition)
+            if target_resolved and target_contract:
+                return check_schema_compatibility(target_resolved, target_contract.schema_definition)
             return {"status": CheckStatus.SKIPPED, "message": "No target to validate"}
         elif check_type == CheckType.ROW_COUNT:
-            return check_row_count(source_path, contract.quality_rules, target_path)
+            return check_row_count(source_resolved, contract.quality_rules, target_resolved)
         elif check_type == CheckType.FRESHNESS:
-            return check_freshness(source_path, contract.freshness)
+            return check_freshness(source_resolved, contract.freshness)
         else:
             raise ValueError(f"Unknown check type: {check_type}")
 

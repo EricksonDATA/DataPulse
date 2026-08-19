@@ -1,9 +1,9 @@
 """Check: schema compatibility — do columns, types, and nullability match the contract?"""
 
-import csv
 from pathlib import Path
 
 from datapulse.models.check_result import CheckStatus
+from datapulse.references import DatasetReference, ResolvedData
 
 # Map contract type names to Python validation functions
 TYPE_VALIDATORS = {
@@ -41,24 +41,42 @@ def _is_date(value: str) -> bool:
     )
 
 
-def check_schema_compatibility(source_path: Path, schema_definition: dict) -> dict:
+def _to_resolved(source: Path | ResolvedData | str) -> ResolvedData:
+    """Convert any source to ResolvedData."""
+    if isinstance(source, ResolvedData):
+        return source
+    if isinstance(source, Path):
+        ref = DatasetReference.from_legacy_path(str(source))
+        return ref.resolve()
+    if isinstance(source, str):
+        ref = DatasetReference.from_uri(source)
+        return ref.resolve()
+    return ResolvedData.from_error(str(source), f"Unsupported source type: {type(source)}")
+
+
+def check_schema_compatibility(source: Path | ResolvedData | str, schema_definition: dict) -> dict:
     """
     Compare the observed schema with the contract schema.
 
+    Accepts Path, ResolvedData, or URI string.
     Checks:
     - Missing required columns
     - Unexpected extra columns
     - Type mismatches
     - Null values in non-nullable fields
-
-    Returns:
-        dict with status, expected, observed, message.
     """
-    with source_path.open(newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        rows = list(reader)
-        observed_columns = list(reader.fieldnames or [])
+    resolved = _to_resolved(source)
 
+    if not resolved.is_parseable:
+        return {
+            "status": CheckStatus.FAILED,
+            "expected": {"columns": sorted(schema_definition.keys()), "column_count": len(schema_definition)},
+            "observed": {"columns": [], "column_count": 0, "error": resolved.error},
+            "message": f"Cannot read source for schema check: {resolved.error}",
+        }
+
+    observed_columns = resolved.columns
+    rows = resolved.rows
     expected_columns = set(schema_definition.keys())
     actual_columns = set(observed_columns)
 
