@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataPulse Architecture</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #020617;
+      min-height: 100vh;
+      padding: 2rem;
+      color: white;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; }
+    .header-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .pulse-dot {
+      width: 12px;
+      height: 12px;
+      background: #22d3ee;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 1rem;
+      border: 1px solid #1e293b;
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+    svg { width: 100%; min-width: 900px; display: block; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 0.75rem;
+      border: 1px solid #1e293b;
+      padding: 1.25rem;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; }
+    .card-dot.emerald { background: #34d399; }
+    .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; }
+    .card-dot.rose { background: #fb7185; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #475569;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>DataPulse Architecture</h1>
+      </div>
+      <p class="subtitle">Data contract and pipeline observability platform — v1.0.0</p>
+    </div>
+
+    <!-- Main Diagram -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 1000 700">
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+          </marker>
+          <marker id="arrowhead-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" />
+          </marker>
+          <marker id="arrowhead-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#34d399" />
+          </marker>
+          <marker id="arrowhead-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" />
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+
+        <!-- Background Grid -->
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <!-- ============================================================
+             ROW 1: External Pipelines (top)
+             ============================================================ -->
+
+        <!-- Healthcare Pipeline -->
+        <rect x="40" y="40" width="180" height="70" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="130" y="62" fill="white" font-size="11" font-weight="600" text-anchor="middle">Healthcare Pipeline</text>
+        <text x="130" y="78" fill="#94a3b8" font-size="9" text-anchor="middle">CSV / dbt / Spark</text>
+        <text x="130" y="94" fill="#94a3b8" font-size="8" text-anchor="middle">hospital admissions data</text>
+
+        <!-- Ecommerce Pipeline -->
+        <rect x="260" y="40" width="180" height="70" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="350" y="62" fill="white" font-size="11" font-weight="600" text-anchor="middle">Ecommerce Pipeline</text>
+        <text x="350" y="78" fill="#94a3b8" font-size="9" text-anchor="middle">CSV / S3 / PySpark</text>
+        <text x="350" y="94" fill="#94a3b8" font-size="8" text-anchor="middle">daily order data</text>
+
+        <!-- S3 Bucket -->
+        <rect x="480" y="40" width="160" height="70" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="560" y="62" fill="white" font-size="11" font-weight="600" text-anchor="middle">S3 / LocalStack</text>
+        <text x="560" y="78" fill="#94a3b8" font-size="9" text-anchor="middle">Object Storage</text>
+        <text x="560" y="94" fill="#fbbf24" font-size="8" text-anchor="middle">s3://bucket/data/*.csv</text>
+
+        <!-- ============================================================
+             ROW 2: SDK / Adapters
+             ============================================================ -->
+
+        <!-- SDK -->
+        <rect x="150" y="160" width="140" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="220" y="182" fill="white" font-size="11" font-weight="600" text-anchor="middle">Python SDK</text>
+        <text x="220" y="198" fill="#94a3b8" font-size="9" text-anchor="middle">DataPulseClient</text>
+
+        <!-- Adapters -->
+        <rect x="330" y="160" width="180" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="420" y="182" fill="white" font-size="11" font-weight="600" text-anchor="middle">Pipeline Adapters</text>
+        <text x="420" y="198" fill="#94a3b8" font-size="9" text-anchor="middle">healthcare | ecommerce</text>
+
+        <!-- DatasetReference -->
+        <rect x="550" y="160" width="160" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="630" y="182" fill="white" font-size="11" font-weight="600" text-anchor="middle">DatasetReference</text>
+        <text x="630" y="198" fill="#94a3b8" font-size="9" text-anchor="middle">local | s3 | table | query</text>
+
+        <!-- ============================================================
+             ROW 3: Core Platform (Docker boundary)
+             ============================================================ -->
+
+        <!-- Docker boundary -->
+        <rect x="80" y="250" width="780" height="280" rx="12" fill="rgba(251, 191, 36, 0.05)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="92" y="270" fill="#fbbf24" font-size="10" font-weight="600">Docker Compose</text>
+
+        <!-- FastAPI -->
+        <rect x="120" y="290" width="180" height="70" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="210" y="312" fill="white" font-size="12" font-weight="600" text-anchor="middle">FastAPI</text>
+        <text x="210" y="328" fill="#94a3b8" font-size="9" text-anchor="middle">14 REST endpoints</text>
+        <text x="210" y="344" fill="#34d399" font-size="8" text-anchor="middle">:8000</text>
+
+        <!-- Quality Checks -->
+        <rect x="340" y="290" width="180" height="70" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="430" y="312" fill="white" font-size="12" font-weight="600" text-anchor="middle">Quality Checks</text>
+        <text x="430" y="328" fill="#94a3b8" font-size="9" text-anchor="middle">5 check types</text>
+        <text x="430" y="344" fill="#94a3b8" font-size="8" text-anchor="middle">readability|schema|target|rows|fresh</text>
+
+        <!-- PostgreSQL -->
+        <rect x="560" y="290" width="160" height="70" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="640" y="312" fill="white" font-size="12" font-weight="600" text-anchor="middle">PostgreSQL</text>
+        <text x="640" y="328" fill="#94a3b8" font-size="9" text-anchor="middle">8 tables, 3 migrations</text>
+        <text x="640" y="344" fill="#a78bfa" font-size="8" text-anchor="middle">:5432</text>
+
+        <!-- Grafana -->
+        <rect x="120" y="400" width="180" height="70" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="210" y="422" fill="white" font-size="12" font-weight="600" text-anchor="middle">Grafana</text>
+        <text x="210" y="438" fill="#94a3b8" font-size="9" text-anchor="middle">7-panel dashboard</text>
+        <text x="210" y="454" fill="#22d3ee" font-size="8" text-anchor="middle">:3000</text>
+
+        <!-- Alert Rules -->
+        <rect x="340" y="400" width="180" height="70" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="430" y="422" fill="white" font-size="12" font-weight="600" text-anchor="middle">Alert Rules</text>
+        <text x="430" y="438" fill="#94a3b8" font-size="9" text-anchor="middle">4 rules, 30s interval</text>
+        <text x="430" y="454" fill="#fb7185" font-size="8" text-anchor="middle">failed|freshness|incidents|drift</text>
+
+        <!-- Webhook -->
+        <rect x="560" y="400" width="160" height="70" rx="6" fill="rgba(251, 146, 60, 0.3)" stroke="#fb923c" stroke-width="1.5"/>
+        <text x="640" y="422" fill="white" font-size="12" font-weight="600" text-anchor="middle">Webhook</text>
+        <text x="640" y="438" fill="#94a3b8" font-size="9" text-anchor="middle">Notification delivery</text>
+        <text x="640" y="454" fill="#fb923c" font-size="8" text-anchor="middle">persistent history</text>
+
+        <!-- ============================================================
+             ROW 4: Outputs
+             ============================================================ -->
+
+        <!-- Grafana Dashboard -->
+        <rect x="120" y="580" width="180" height="55" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="210" y="602" fill="white" font-size="11" font-weight="600" text-anchor="middle">Dashboard</text>
+        <text x="210" y="618" fill="#94a3b8" font-size="9" text-anchor="middle">pipeline health + incidents</text>
+
+        <!-- Alerts -->
+        <rect x="340" y="580" width="180" height="55" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="430" y="602" fill="white" font-size="11" font-weight="600" text-anchor="middle">Alerts</text>
+        <text x="430" y="618" fill="#94a3b8" font-size="9" text-anchor="middle">webhook → /webhook/log</text>
+
+        <!-- API Docs -->
+        <rect x="560" y="580" width="160" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="640" y="602" fill="white" font-size="11" font-weight="600" text-anchor="middle">API Docs</text>
+        <text x="640" y="618" fill="#94a3b8" font-size="9" text-anchor="middle">OpenAPI /docs</text>
+
+        <!-- ============================================================
+             ARROWS
+             ============================================================ -->
+
+        <!-- Pipelines → SDK -->
+        <line x1="130" y1="110" x2="200" y2="158" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <line x1="350" y1="110" x2="280" y2="158" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+        <!-- S3 → DatasetReference -->
+        <line x1="560" y1="110" x2="600" y2="158" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+        <!-- SDK → API -->
+        <line x1="220" y1="215" x2="210" y2="288" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)"/>
+
+        <!-- Adapters → API -->
+        <line x1="420" y1="215" x2="300" y2="288" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)"/>
+
+        <!-- DatasetReference → Checks -->
+        <line x1="630" y1="215" x2="480" y2="288" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)"/>
+
+        <!-- API → Checks -->
+        <line x1="300" y1="325" x2="338" y2="325" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)"/>
+
+        <!-- API → PostgreSQL -->
+        <line x1="300" y1="340" x2="558" y2="325" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+        <!-- PostgreSQL → Grafana -->
+        <path d="M 640 360 L 640 380 Q 640 395 625 395 L 300 395 Q 280 395 280 400 L 280 400" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="5,5"/>
+
+        <!-- Grafana → Alerts -->
+        <line x1="300" y1="435" x2="338" y2="435" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead-cyan)"/>
+
+        <!-- Alerts → Webhook -->
+        <line x1="430" y1="450" x2="558" y2="435" stroke="#fb7185" stroke-width="1.5" marker-end="url(#arrowhead-rose)"/>
+
+        <!-- Grafana → Dashboard output -->
+        <line x1="210" y1="470" x2="210" y2="578" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead-cyan)"/>
+
+        <!-- Alerts → Alerts output -->
+        <line x1="430" y1="470" x2="430" y2="578" stroke="#fb7185" stroke-width="1.5" marker-end="url(#arrowhead-rose)"/>
+
+        <!-- API → API Docs output -->
+        <line x1="640" y1="470" x2="640" y2="578" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)"/>
+
+        <!-- ============================================================
+             LEGEND
+             ============================================================ -->
+        <text x="790" y="270" fill="white" font-size="10" font-weight="600">Legend</text>
+
+        <rect x="790" y="282" width="16" height="10" rx="2" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1"/>
+        <text x="812" y="290" fill="#94a3b8" font-size="8">Backend</text>
+
+        <rect x="790" y="298" width="16" height="10" rx="2" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="812" y="306" fill="#94a3b8" font-size="8">Database</text>
+
+        <rect x="790" y="314" width="16" height="10" rx="2" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="812" y="322" fill="#94a3b8" font-size="8">Observability</text>
+
+        <rect x="790" y="330" width="16" height="10" rx="2" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1"/>
+        <text x="812" y="338" fill="#94a3b8" font-size="8">Alerting</text>
+
+        <rect x="790" y="346" width="16" height="10" rx="2" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="812" y="354" fill="#94a3b8" font-size="8">Cloud/S3</text>
+
+        <rect x="790" y="362" width="16" height="10" rx="2" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1"/>
+        <text x="812" y="370" fill="#94a3b8" font-size="8">External</text>
+
+        <rect x="790" y="378" width="16" height="10" rx="2" fill="transparent" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="812" y="386" fill="#94a3b8" font-size="8">Docker</text>
+
+      </svg>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="cards">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot emerald"></div>
+          <h3>Core Platform</h3>
+        </div>
+        <ul>
+          <li>• FastAPI with 14 REST endpoints</li>
+          <li>• 5 quality checks (readability → freshness)</li>
+          <li>• Versioned data contracts</li>
+          <li>• Idempotent run submission</li>
+          <li>• Incident creation + ownership</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot violet"></div>
+          <h3>Data Layer</h3>
+        </div>
+        <ul>
+          <li>• PostgreSQL 16 (8 tables, Alembic migrations)</li>
+          <li>• SQLite for local dev + unit tests</li>
+          <li>• DatasetReference abstraction (local/S3/table)</li>
+          <li>• Streaming CSV for large datasets</li>
+          <li>• Durable notification history</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot cyan"></div>
+          <h3>Observability</h3>
+        </div>
+        <ul>
+          <li>• Grafana dashboard (7 panels, 30s refresh)</li>
+          <li>• 4 alert rules → webhook delivery</li>
+          <li>• Operational metrics endpoint</li>
+          <li>• API key + webhook secret auth</li>
+          <li>• 92 tests, CI with 5 jobs</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <p class="footer">
+      DataPulse v1.0.0 • github.com/EricksonDATA/DataPulse • LocalStack verified, AWS documented
+    </p>
+  </div>
+</body>
+</html>

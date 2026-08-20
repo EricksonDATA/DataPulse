@@ -255,6 +255,88 @@ Provisioned at `http://localhost:3000/d/datapulse-health` with 7 panels:
 
 4 alert rules fire to the webhook at `http://api:8000/webhook/receiver`.
 
+## AWS deployment
+
+DataPulse can connect to real S3 buckets using the same DatasetReference abstraction. Here's what you need:
+
+### Environment variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `DATAPULSE_S3_ENDPOINT_URL` | For LocalStack/MinIO | (none) | Custom S3 endpoint URL |
+| `DATAPULSE_S3_REGION` | No | `us-east-1` | AWS region |
+| `DATAPULSE_S3_ACCESS_KEY` | For explicit creds | (none) | AWS access key ID |
+| `DATAPULSE_S3_SECRET_KEY` | For explicit creds | (none) | AWS secret access key |
+| `DATAPULSE_S3_MOCK` | No | `false` | Set to `true` for mock mode (no real S3 calls) |
+
+### Client resolution priority
+
+1. `DATAPULSE_S3_MOCK=true` → mock mode (no real S3 calls)
+2. `DATAPULSE_S3_ENDPOINT_URL` set → use custom endpoint (LocalStack, MinIO)
+3. `DATAPULSE_S3_ACCESS_KEY` set → use explicit credentials
+4. Neither endpoint nor access key set → return None (no S3 client)
+
+**Important:** DataPulse does NOT use default AWS credentials automatically. You must explicitly configure either `DATAPULSE_S3_ENDPOINT_URL` or `DATAPULSE_S3_ACCESS_KEY`.
+
+### IAM permissions
+
+The S3 client needs these IAM permissions:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::your-bucket-name",
+                "arn:aws:s3:::your-bucket-name/*"
+            ]
+        }
+    ]
+}
+```
+
+### Docker Compose with AWS
+
+```yaml
+services:
+  api:
+    environment:
+      DATAPULSE_S3_REGION: us-east-1
+      DATAPULSE_S3_ACCESS_KEY: ${AWS_ACCESS_KEY_ID}
+      DATAPULSE_S3_SECRET_KEY: ${AWS_SECRET_ACCESS_KEY}
+      # Do NOT set DATAPULSE_S3_ENDPOINT_URL for real AWS
+```
+
+### LocalStack/MinIO (local testing)
+
+```yaml
+services:
+  api:
+    environment:
+      DATAPULSE_S3_ENDPOINT_URL: http://localstack:4566
+      DATAPULSE_S3_ACCESS_KEY: test
+      DATAPULSE_S3_SECRET_KEY: test
+      DATAPULSE_S3_REGION: us-east-1
+```
+
+### Verification status
+
+| Component | LocalStack | AWS |
+|---|---|---|
+| S3 client creation | ✅ Verified | ⚠️ Not tested |
+| CSV read from S3 | ✅ Verified | ⚠️ Not tested |
+| Missing object handling | ✅ Verified | ⚠️ Not tested |
+| Schema validation | ✅ Verified | ⚠️ Not tested |
+| End-to-end pipeline run | ✅ Verified | ⚠️ Not tested |
+
+**To verify with AWS:** Set `DATAPULSE_S3_ACCESS_KEY` and `DATAPULSE_S3_SECRET_KEY` (without `DATAPULSE_S3_ENDPOINT_URL`) and run the S3 integration tests with a real bucket.
+
 ## Monitored pipelines
 
 | Pipeline | Adapter | Data type | Freshness |

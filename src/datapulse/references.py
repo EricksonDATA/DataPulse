@@ -176,22 +176,39 @@ class DatasetReference:
     def _resolve_s3(self, s3_client=None) -> ResolvedData:
         """Resolve an S3 reference.
 
-        If s3_client is None and DATAPULSE_S3_MOCK=true, returns mock data.
-        If s3_client is None and mock mode is not enabled, returns an error.
-        In production, uses boto3 to download and parse the object.
+        Client resolution order:
+        1. Explicit s3_client parameter (for testing with custom clients)
+        2. DATAPULSE_S3_MOCK=true → mock data
+        3. Auto-create client from environment (endpoint URL, credentials, IAM roles)
+        4. Fail with clear error
         """
         import os
 
+        # 1. Use explicit client if provided
+        if s3_client is not None:
+            return self._resolve_s3_with_client(s3_client)
+
+        # 2. Mock mode
         mock_enabled = os.environ.get("DATAPULSE_S3_MOCK", "").lower() == "true"
+        if mock_enabled:
+            return self._resolve_s3_mock()
 
-        if s3_client is None:
-            if mock_enabled:
-                return self._resolve_s3_mock()
-            return ResolvedData.from_error(
-                self.uri,
-                "S3 client required. Set DATAPULSE_S3_MOCK=true for testing or provide a boto3 client.",
-            )
+        # 3. Auto-create client from environment
+        from datapulse.s3_client import create_s3_client
 
+        client = create_s3_client()
+        if client is not None:
+            return self._resolve_s3_with_client(client)
+
+        # 4. No client available
+        return ResolvedData.from_error(
+            self.uri,
+            "S3 client required. Set DATAPULSE_S3_MOCK=true for testing, "
+            "or configure DATAPULSE_S3_ENDPOINT_URL / credentials.",
+        )
+
+    def _resolve_s3_with_client(self, s3_client) -> ResolvedData:
+        """Resolve an S3 reference using an explicit boto3 client."""
         try:
             # Parse bucket and key from raw_path
             parts = self.raw_path.split("/", 1)

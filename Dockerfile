@@ -9,8 +9,8 @@ COPY migrations/ migrations/
 COPY examples/ examples/
 COPY tests/ tests/
 
-# Install package + dependencies
-RUN pip install --no-cache-dir ".[dev]"
+# Install package + dependencies (including S3 support)
+RUN pip install --no-cache-dir ".[dev,s3]"
 
 # Run migrations then start the API
 CMD alembic upgrade head && uvicorn datapulse.api.app:app --host 0.0.0.0 --port 8000

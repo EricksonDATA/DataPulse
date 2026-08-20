@@ -23,6 +23,10 @@ services:
       DATAPULSE_DATABASE_URL: postgresql+psycopg://datapulse:change-me@postgres:5432/datapulse
       DATAPULSE_LOG_LEVEL: INFO
       DATAPULSE_ENVIRONMENT: development
+      DATAPULSE_S3_ENDPOINT_URL: http://host.docker.internal:4566
+      DATAPULSE_S3_ACCESS_KEY: test
+      DATAPULSE_S3_SECRET_KEY: test
+      DATAPULSE_S3_REGION: us-east-1
     volumes:
       - ./examples/fixtures:/app/examples/fixtures:ro
     depends_on:
