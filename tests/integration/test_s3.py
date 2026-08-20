@@ -73,7 +73,6 @@ def test_bucket(s3_client):
         s3_client.create_bucket(Bucket=TEST_BUCKET)
     except s3_client.exceptions.BucketAlreadyOwnedByYou:
         pass
-    # Wait for bucket to be available
     time.sleep(1)
     return TEST_BUCKET
 
@@ -108,12 +107,19 @@ class TestS3ClientFactory:
             access_key="test",
             secret_key="test",
         )
-        # Client object is created but operations will fail
         assert client is not None
 
 
 class TestS3ReferenceResolution:
     """Test DatasetReference S3 resolution with real S3."""
+
+    @pytest.fixture(autouse=True)
+    def _set_localstack_env(self, monkeypatch):
+        """Set env vars so create_s3_client() picks up LocalStack."""
+        monkeypatch.setenv("DATAPULSE_S3_ENDPOINT_URL", LOCALSTACK_ENDPOINT)
+        monkeypatch.setenv("DATAPULSE_S3_ACCESS_KEY", LOCALSTACK_ACCESS_KEY)
+        monkeypatch.setenv("DATAPULSE_S3_SECRET_KEY", LOCALSTACK_SECRET_KEY)
+        monkeypatch.setenv("DATAPULSE_S3_REGION", LOCALSTACK_REGION)
 
     def test_resolve_s3_csv(self, test_csv_object):
         """Should read and parse CSV from S3."""
@@ -141,19 +147,19 @@ class TestS3ReferenceResolution:
         assert rd.is_parseable is False
         assert "Invalid S3 path" in rd.error
 
-    def test_resolve_s3_empty_object(self, s3_client, test_bucket):
-        """Should fail for empty S3 object."""
+    def test_resolve_s3_header_only(self, s3_client, test_bucket):
+        """Should fail for header-only CSV (0 data rows)."""
+        csv_header = "order_id,amount,status\n"
         s3_client.put_object(
             Bucket=test_bucket,
             Key="data/empty.csv",
-            Body=b"",
+            Body=csv_header.encode("utf-8"),
             ContentType="text/csv",
         )
         time.sleep(1)
 
         ref = DatasetReference.from_uri(f"s3://{test_bucket}/data/empty.csv")
         rd = ref.resolve()
-        # Empty file may parse as 0 rows or fail
         assert rd.row_count == 0 or not rd.is_parseable
 
 
