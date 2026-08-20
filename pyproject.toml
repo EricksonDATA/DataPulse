@@ -1,6 +1,6 @@
 [project]
 name = "datapulse"
-version = "0.2.0"
+version = "1.0.0"
 description = "Data contract and pipeline observability platform"
 requires-python = ">=3.11"
 dependencies = [
